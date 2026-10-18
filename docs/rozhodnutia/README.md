@@ -7,4 +7,4 @@ Krátke záznamy o dôležitých rozhodnutiach – **prečo** sme niečo zvolili
 
 | # | Rozhodnutie | Stav |
 |---|---|---|
-| 0001 | [Technologický stack](0001-technologicky-stack.md) | navrhnuté |
+| 0001 | [Technologický stack](0001-technologicky-stack.md) | prijaté |

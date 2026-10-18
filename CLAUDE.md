@@ -27,8 +27,20 @@ publikum sleduje tabuľu na projektore/TV.
 - Nepoužívaj originálne logo, grafiku ani zvuky z TV relácie (licencia FremantleMedia).
 
 ## Stav projektu
-Fáza: **príprava** – kód ešte neexistuje. Stack je navrhnutý (ADR 0001, Vite + React + TypeScript),
-čaká na potvrdenie v úlohe T-001.
+Fáza: **vývoj MVP**. Stack: Vite + Vue 3 + TypeScript + Tailwind v4 (ADR 0001).
+
+## Štruktúra kódu
+- `src/engine/` – herný engine (čistý TS, bez Vue/DOM), testy v `src/engine/__tests__/`
+- `src/screens/{moderator,board,editor}/` – obrazovky (routy `/moderator`, `/board`, `/editor`)
+- `src/shared/` – zdieľané veci UI (synchronizácia okien, persistencia)
+- `data/` – sady otázok (JSON)
 
 ## Príkazy
-<!-- Doplniť v T-001 (dev, test, build). -->
+| Príkaz | Čo robí |
+|---|---|
+| `npm run dev` | vývojový server (http://localhost:5173) |
+| `npm test` | jednorazový beh testov (Vitest); `npm run test:watch` = sledovanie zmien |
+| `npm run build` | typová kontrola (`vue-tsc`) + produkčný build do `dist/` |
+| `npm run preview` | spustí produkčný build lokálne |
+| `npm run lint` | Oxlint + ESLint (s automatickou opravou) |
+| `npm run format` | Prettier nad `src/` |
