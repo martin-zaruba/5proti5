@@ -1,4 +1,5 @@
 export * from './profiles'
+export * from './ranking'
 export * from './questions'
 export * from './game'
 export * from './session'

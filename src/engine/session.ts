@@ -5,6 +5,7 @@
 
 import { gameReducer, isTieAfterLastRound, type GameAction, type GameState } from './game'
 import type { QuestionSet } from './questions'
+import { rankingTarget } from './ranking'
 
 export interface LogEntry {
   /** ISO timestamp. */
@@ -76,6 +77,11 @@ export function describeAction(before: GameState, action: GameAction, after: Gam
   const team = (i: 0 | 1) => after.teams[i].name
   const round = after.round
   const parts: string[] = []
+
+  if (before.phase === 'ranking' || (action.type === 'nextRound' && after.phase === 'ranking')) {
+    const text = describeRanking(before, action, after)
+    if (text) return text
+  }
 
   switch (action.type) {
     case 'nextRound':
@@ -167,4 +173,40 @@ export function describeAction(before: GameState, action: GameAction, after: Gam
     if (isTieAfterLastRound(after)) parts.push('remíza – 5. kolo sa bude opakovať')
   }
   return parts.join('; ')
+}
+
+function describeRanking(before: GameState, action: GameAction, after: GameState): string | null {
+  const team = (i: 0 | 1) => after.teams[i].name
+  const ranking = after.ranking!
+  const turn = ranking.control === null ? null : team(ranking.control)
+  switch (action.type) {
+    case 'nextRound':
+      return `Zoraďovačka: ${ranking.question.text} – ${
+        turn ? `začína ${turn}` : 'skóre je rovnaké, začínajúce družstvo vyberie moderátor'
+      }`
+    case 'chooseStartingTeam':
+      return `Zoraďovačku začína ${team(action.team)}`
+    case 'rankingGuess':
+    case 'wrongAnswer':
+    case 'timeout': {
+      const target = rankingTarget(before.ranking!)
+      const named =
+        action.type === 'rankingGuess'
+          ? `„${ranking.question.answers[action.rank - 1]!.text}“`
+          : action.type === 'timeout'
+            ? 'čas vypršal'
+            : 'nesprávna odpoveď'
+      const correct = action.type === 'rankingGuess' && ranking.revealed[action.rank - 1]
+      if (!correct) {
+        return `Zoraďovačka: ${named} – nie je na ${target}. mieste; séria prepadá, pokračuje ${turn}`
+      }
+      const points = ranking.question.answers[action.rank - 1]!.points
+      const text = `Zoraďovačka: ${named} je na ${target}. mieste (+${pts(points)}, séria ${pts(ranking.bank)})`
+      return after.phase === 'rankingEnd'
+        ? `${text}; tabuľka je kompletná – ${team(ranking.winner!)} získava ${pts(ranking.bank)}`
+        : text
+    }
+    default:
+      return null
+  }
 }

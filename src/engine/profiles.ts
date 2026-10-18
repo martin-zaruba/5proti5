@@ -20,6 +20,12 @@ export interface RuleProfile {
   teamSize: number
   captainPosition: number
   standardRounds: StandardRoundDef[]
+  /** Bonus round Zoraďovačka (§4), played after the given round number. */
+  ranking?: {
+    afterRound: number
+    /** Who starts on equal scores (OQ-03): the host decides, or the loser of the last round. */
+    tieStarter: 'host' | 'lastRoundLoser'
+  }
 }
 
 export const PROFILE_2026: RuleProfile = {
@@ -35,6 +41,7 @@ export const PROFILE_2026: RuleProfile = {
     { number: 4, multiplier: 2, stealIncludesAnswer: false, label: 'Štvrté kolo – dvojitá šanca' },
     { number: 5, multiplier: 3, stealIncludesAnswer: true, label: 'Piate kolo – trojitá šanca' },
   ],
+  ranking: { afterRound: 3, tieStarter: 'host' },
 }
 
 const PROFILES: Partial<Record<RuleProfileId, RuleProfile>> = { '2026': PROFILE_2026 }

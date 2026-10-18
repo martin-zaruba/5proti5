@@ -60,12 +60,14 @@
   ],
   "ranking": {
     "type": "ranking",
-    "text": "Ktoré ročné obdobie máte najradšej?",
+    "text": "Čo si Slováci najčastejšie objednajú v reštaurácii?",
     "answers": [
-      { "text": "Leto", "points": 38 },
-      { "text": "Jar", "points": 27 },
-      { "text": "Jeseň", "points": 21 },
-      { "text": "Zima", "points": 14 }
+      { "text": "Vyprážaný syr", "points": 29 },
+      { "text": "Bryndzové halušky", "points": 22 },
+      { "text": "Pizzu", "points": 17 },
+      { "text": "Rezeň", "points": 14 },
+      { "text": "Burger", "points": 10 },
+      { "text": "Cestoviny", "points": 6 }
     ]
   },
   "final": [

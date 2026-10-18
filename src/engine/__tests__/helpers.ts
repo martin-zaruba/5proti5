@@ -14,11 +14,28 @@ const question = (text: string): Question => ({
   answers: POINTS.map((points, i) => ({ text: `${text} – odpoveď ${i + 1}`, points })),
 })
 
-export function makeSet(reserveCount = 3): QuestionSet {
+/**
+ * Zoraďovačka question: ranks 1–4 = Delta 40, Alfa 30, Cézar 20, Beta 10.
+ * Alphabetical board order is Alfa, Beta, Cézar, Delta → ranks [2, 4, 3, 1].
+ */
+export const RANKING_QUESTION: Question = {
+  type: 'ranking',
+  text: 'Zoraďovačka',
+  answers: [
+    { text: 'Delta', points: 40 },
+    { text: 'Alfa', points: 30 },
+    { text: 'Cézar', points: 20 },
+    { text: 'Beta', points: 10 },
+  ],
+}
+
+/** Without `withRanking` the set has no Zoraďovačka question, so the game skips it. */
+export function makeSet(reserveCount = 3, withRanking = false): QuestionSet {
   return {
     name: 'Testovacia sada',
     ruleProfile: '2026',
     rounds: [1, 2, 3, 4, 5].map((n) => question(`Kolo ${n}`)),
+    ranking: withRanking ? RANKING_QUESTION : undefined,
     final: [],
     reserve: Array.from({ length: reserveCount }, (_, i) => question(`Rezerva ${i + 1}`)),
   }

@@ -8,6 +8,20 @@ import AnswerTile from './AnswerTile.vue'
 
 const view = ref<BoardView | null>(null)
 const round = computed(() => view.value?.round ?? null)
+const ranking = computed(() => view.value?.ranking ?? null)
+
+/** Common header data for a standard round and Zoraďovačka. */
+const stage = computed(() => {
+  const r = round.value ?? ranking.value
+  if (!r) return null
+  return {
+    label: r.label,
+    bank: r.bank,
+    strikes: round.value?.strikes ?? 0,
+    activeTeam: r.activeTeam,
+    question: r.question,
+  }
+})
 
 /* Big X flash – only for strikes that happen while the board is open. */
 const strikeFlash = ref(0)
@@ -45,6 +59,12 @@ const rows = computed(() => Math.ceil((round.value?.slots.length ?? 0) / 2))
 
 const banner = computed(() => {
   const v = view.value
+  const k = ranking.value
+  if (v && k) {
+    if (v.phase === 'rankingEnd') return `${v.teams[k.winner!]!.name} získava ${k.bank} bodov`
+    if (k.activeTeam === null) return 'Začínajúce družstvo určí moderátor'
+    return `Hľadá sa ${k.target}. miesto – tipuje ${v.teams[k.activeTeam]!.name}`
+  }
   const r = round.value
   if (!v || !r) return null
   if (v.phase === 'roundEnd') {
@@ -96,15 +116,15 @@ const TEAM_TEXT = ['text-sky-300', 'text-orange-300'] as const
         </p>
       </div>
 
-      <!-- Round -->
-      <div v-else-if="round" class="flex h-full flex-col gap-[1.5cqw] p-[2.5cqw]">
+      <!-- Round or Zoraďovačka -->
+      <div v-else-if="stage" class="flex h-full flex-col gap-[1.5cqw] p-[2.5cqw]">
         <header class="grid grid-cols-[1fr_auto_1fr] items-center gap-[2cqw]">
           <div
             v-for="t in [0, 1] as const"
             :key="t"
             class="score rounded-[1cqw] px-[2cqw] py-[1cqw] ring-[0.35cqw] transition"
             :class="[
-              round.activeTeam === t ? TEAM_RING[t] : 'ring-transparent',
+              stage.activeTeam === t ? TEAM_RING[t] : 'ring-transparent',
               t === 1 ? 'order-3 text-right' : '',
             ]"
           >
@@ -116,33 +136,65 @@ const TEAM_TEXT = ['text-sky-300', 'text-orange-300'] as const
             </div>
           </div>
           <div class="order-2 flex flex-col items-center">
-            <div class="text-[1.8cqw] font-bold text-blue-200 uppercase">{{ round.label }}</div>
+            <div class="text-[1.8cqw] font-bold text-blue-200 uppercase">{{ stage.label }}</div>
             <div
               class="score rounded-[1cqw] px-[3cqw] py-[0.6cqw] text-[5.5cqw] leading-none font-black text-amber-300 tabular-nums"
             >
-              {{ round.bank }}
+              {{ stage.bank }}
             </div>
             <div
               class="mt-[0.5cqw] flex h-[3cqw] gap-[0.8cqw] text-[3cqw] leading-none font-black text-red-500"
             >
-              <span v-for="i in round.strikes" :key="i">✗</span>
+              <span v-for="i in stage.strikes" :key="i">✗</span>
             </div>
           </div>
         </header>
 
-        <p v-if="round.question" class="text-center text-[2.6cqw] leading-tight font-bold">
-          {{ round.question }}
+        <p v-if="stage.question" class="text-center text-[2.6cqw] leading-tight font-bold">
+          {{ stage.question }}
         </p>
 
         <section
-          class="grid flex-1 grid-flow-col grid-cols-2 gap-x-[2cqw] gap-y-[1.2cqw] rounded-[1.5cqw] bg-blue-950/60 p-[1.5cqw]"
+          v-if="round"
+          class="grid min-h-0 flex-1 grid-flow-col grid-cols-2 gap-x-[2cqw] gap-y-[1.2cqw] rounded-[1.5cqw] bg-blue-950/60 p-[1.5cqw]"
           :style="{ gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))` }"
         >
           <AnswerTile v-for="tile in round.slots" :key="tile.rank" :tile="tile" />
         </section>
 
+        <!-- Zoraďovačka: all answers (left) are placed on the ladder (right) from the bottom -->
+        <section
+          v-else-if="ranking"
+          class="grid min-h-0 flex-1 grid-cols-[2fr_3fr] gap-x-[2cqw] gap-y-[0.8cqw] rounded-[1.5cqw] bg-blue-950/60 p-[1.5cqw]"
+          :style="{ gridTemplateRows: `repeat(${ranking.slots.length}, minmax(0, 1fr))` }"
+        >
+          <ul class="col-start-1 row-span-full grid grid-rows-subgrid">
+            <li
+              v-for="answer in ranking.answers"
+              :key="answer.text"
+              class="flex min-h-0 items-center truncate rounded-[0.6cqw] border-[0.2cqw] px-[1.2cqw] text-[2.2cqw] font-black uppercase transition duration-500"
+              :class="
+                answer.placed
+                  ? 'border-transparent text-blue-300/40 line-through'
+                  : 'border-amber-300/50 bg-blue-900/70'
+              "
+            >
+              {{ answer.text }}
+            </li>
+          </ul>
+          <div class="col-start-2 row-span-full grid grid-rows-subgrid">
+            <AnswerTile
+              v-for="tile in ranking.slots"
+              :key="tile.rank"
+              :tile="tile"
+              :highlight="tile.rank === ranking.target && view.phase === 'ranking'"
+              compact
+            />
+          </div>
+        </section>
+
         <div class="flex h-[5cqw] items-center justify-center">
-          <Transition name="fade">
+          <Transition name="fade" mode="out-in">
             <p
               v-if="banner"
               :key="banner"

@@ -5,6 +5,7 @@ import {
   currentTurns,
   isLastRound,
   isTieAfterLastRound,
+  leadsToRanking,
   MAX_STRIKES,
   otherTeam,
   requireProfile,
@@ -15,11 +16,13 @@ import {
 import { useGameStore } from '@/shared/gameStore'
 
 import ConfirmButton from './ConfirmButton.vue'
+import RankingAnswers from './RankingAnswers.vue'
 
 const store = useGameStore()
 // The panel is only rendered while a game exists.
 const state = computed(() => store.state.value as GameState)
 const round = computed(() => state.value.round)
+const ranking = computed(() => state.value.ranking)
 const profile = computed(() => requireProfile(state.value.profileId))
 const turns = computed(() => currentTurns(state.value))
 const phase = computed(() => state.value.phase)
@@ -58,6 +61,12 @@ const status = computed(() => {
       }[r!.outcome!]
       return `Kolo získava ${teamName(r!.winner!)} (+${r!.bank} b.) – ${outcome}`
     }
+    case 'ranking':
+      return turn
+        ? `Zoraďovačka – tipuje ${teamName(turn.team)}: ${player(turn.team, turn.position)}, séria ${ranking.value!.bank} b.`
+        : 'Zoraďovačka – skóre je rovnaké, vyber družstvo, ktoré začína.'
+    case 'rankingEnd':
+      return `Zoraďovačka je kompletná – ${teamName(ranking.value!.winner!)} získava ${ranking.value!.bank} b.`
     default:
       return `Koniec hry – vyhráva ${teamName(state.value.winner!)}`
   }
@@ -84,12 +93,17 @@ const canMiss = computed(
   () =>
     (phase.value === 'faceOff' && round.value?.buzzed !== null) ||
     phase.value === 'play' ||
-    phase.value === 'steal',
+    phase.value === 'steal' ||
+    (phase.value === 'ranking' && ranking.value?.control !== null),
 )
+const canAdvance = computed(() => ['intro', 'roundEnd', 'rankingEnd'].includes(phase.value))
 const tie = computed(() => isTieAfterLastRound(state.value))
 const nextLabel = computed(() => {
   if (phase.value === 'intro') return 'Spustiť 1. kolo'
+  if (phase.value === 'rankingEnd') return `Spustiť ${profile.value.ranking!.afterRound + 1}. kolo`
   if (tie.value) return 'Remíza – opakovať 5. kolo'
+  const set = store.session.value!.questionSet
+  if (round.value && leadsToRanking(state.value, round.value, set)) return 'Spustiť Zoraďovačku'
   if (round.value && isLastRound(state.value, round.value)) return 'Ukončiť hru'
   return `Spustiť ${(round.value?.number ?? 0) + 1}. kolo`
 })
@@ -117,15 +131,26 @@ function onKey(event: KeyboardEvent) {
   }
   if (event.ctrlKey || event.metaKey || event.altKey) return
   const key = event.key.toLowerCase()
-  const rank = Number(key)
-  if (rank >= 1 && rank <= 6 && canReveal.value) act({ type: 'revealAnswer', rank })
+  const digit = Number(key)
+  if (phase.value === 'ranking' && ranking.value) {
+    // Digits pick answers in board order; A / L choose the starting team on a tie.
+    const rank = ranking.value.displayOrder[digit - 1]
+    if (digit >= 1 && rank !== undefined && canMiss.value) act({ type: 'rankingGuess', rank })
+    else if ((key === 'a' || key === 'l') && ranking.value.control === null)
+      act({ type: 'chooseStartingTeam', team: key === 'a' ? 0 : 1 })
+    else if (key === 'x' && canMiss.value) act({ type: 'wrongAnswer' })
+    else if (key === 't' && canMiss.value) act({ type: 'timeout' })
+    else return
+    event.preventDefault()
+    return
+  }
+  if (digit >= 1 && digit <= 6 && canReveal.value) act({ type: 'revealAnswer', rank: digit })
   else if (key === 'a' && phase.value === 'faceOff') act({ type: 'buzz', team: 0 })
   else if (key === 'l' && phase.value === 'faceOff') act({ type: 'buzz', team: 1 })
   else if (key === 'x' && canMiss.value) act({ type: 'wrongAnswer' })
   else if (key === 't' && canMiss.value) act({ type: 'timeout' })
   else if (key === 'r' && phase.value === 'roundEnd') act({ type: 'revealRemaining' })
-  else if (key === 'n' && (phase.value === 'intro' || phase.value === 'roundEnd'))
-    act({ type: 'nextRound' })
+  else if (key === 'n' && canAdvance.value) act({ type: 'nextRound' })
   else return
   event.preventDefault()
 }
@@ -182,6 +207,11 @@ const time = (iso: string) => new Date(iso).toLocaleTimeString('sk-SK')
             >
           </div>
         </template>
+        <template v-else-if="ranking">
+          <div class="text-sm text-slate-400">Bonusové kolo</div>
+          <div class="text-sm font-bold text-amber-400">Zoraďovačka ×1</div>
+          <div class="text-3xl font-black tabular-nums">séria {{ ranking.bank }}</div>
+        </template>
         <div v-else class="text-slate-400">Úvod</div>
       </div>
     </section>
@@ -192,7 +222,7 @@ const time = (iso: string) => new Date(iso).toLocaleTimeString('sk-SK')
       :class="
         phase === 'steal'
           ? 'bg-red-900/60'
-          : phase === 'roundEnd'
+          : phase === 'roundEnd' || phase === 'rankingEnd'
             ? 'bg-emerald-900/60'
             : 'bg-slate-800'
       "
@@ -266,6 +296,7 @@ const time = (iso: string) => new Date(iso).toLocaleTimeString('sk-SK')
             </li>
           </ol>
         </template>
+        <RankingAnswers v-else-if="ranking" />
 
         <!-- Main controls -->
         <div class="flex flex-wrap gap-2 pt-2">
@@ -308,7 +339,7 @@ const time = (iso: string) => new Date(iso).toLocaleTimeString('sk-SK')
             </button>
           </template>
           <button
-            v-if="phase === 'intro' || phase === 'roundEnd'"
+            v-if="canAdvance"
             class="btn bg-amber-400 py-4 text-lg text-slate-900"
             @click="act({ type: 'nextRound' })"
           >
@@ -397,6 +428,11 @@ const time = (iso: string) => new Date(iso).toLocaleTimeString('sk-SK')
             <li><span class="kbd">X</span> nesprávne, <span class="kbd">T</span> čas vypršal</li>
             <li>
               <span class="kbd">R</span> odkryť zvyšné, <span class="kbd">N</span> ďalšie kolo
+            </li>
+            <li>
+              Zoraďovačka: <span class="kbd">1</span>–<span class="kbd">9</span> tip podľa poradia v
+              zozname, <span class="kbd">A</span> / <span class="kbd">L</span> začínajúce družstvo
+              pri rovnosti
             </li>
             <li><span class="kbd">Ctrl+Z</span> späť</li>
           </ul>

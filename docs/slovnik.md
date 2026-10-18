@@ -23,7 +23,9 @@ Dokumentácia a UI sú po slovensky, **kód (identifikátory) po anglicky**. Tá
 | bank kola | `roundBank` | body nahraté v aktuálnom kole |
 | krádež bodov | `steal` | pokus súpera po 3 X |
 | konto, skóre | `score` | celkové body družstva |
-| Zoraďovačka | `rankingRound` | bonusové kolo zoraďovania |
+| Zoraďovačka | `ranking` (fázy `ranking`, `rankingEnd`) | bonusové kolo zoraďovania |
+| tip (v Zoraďovačke) | `rankingGuess` | odpoveď, ktorú družstvo zaraďuje na hľadané miesto |
+| séria | `bank` v `RankingState`, `counted` | body družstva v Zoraďovačke od jeho posledného prevzatia kontroly |
 | dvojitá / trojitá šanca | `double` / `triple` | kolá s násobkom 2 / 3 |
 | finále, Veľké peniaze | `finalRound` / `fastMoney` | záverečné kolo dvoch hráčov |
 | Malé peniaze | `smallMoney` | výhra pri 100–199 bodoch vo finále |
