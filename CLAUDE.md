@@ -27,13 +27,13 @@ publikum sleduje tabuľu na projektore/TV.
 - Nepoužívaj originálne logo, grafiku ani zvuky z TV relácie (licencia FremantleMedia).
 
 ## Stav projektu
-Fáza: **celý diel odohrateľný** (kolá 1–5, Zoraďovačka, finále; panel + tabuľa); časovače a zvuky hotové; ďalej P2 úloha T-011 (editor). Stack: Vite + Vue 3 + TypeScript + Tailwind v4 (ADR 0001).
+Fáza: **celý diel odohrateľný** (kolá 1–5, Zoraďovačka, finále; panel + tabuľa); časovače, zvuky a editor sád hotové – všetky P1 a P2 úlohy sú hotové; zostávajú P3 (T-010 buzzery, T-012 profil 2022). Stack: Vite + Vue 3 + TypeScript + Tailwind v4 (ADR 0001).
 
 ## Štruktúra kódu
 - `src/engine/` – herný engine (čistý TS, bez Vue/DOM), testy v `src/engine/__tests__/`
 - `src/screens/{moderator,board,editor}/` – obrazovky (routy `/moderator`, `/board`, `/editor`)
 - `src/shared/` – zdieľané veci UI (synchronizácia okien, persistencia)
-- `data/` – sady otázok (JSON)
+- `data/` – ukážková sada otázok (JSON); vlastné sady sú v knižnici editora (`localStorage`)
 
 ## Príkazy
 | Príkaz | Čo robí |

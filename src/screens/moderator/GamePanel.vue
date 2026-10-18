@@ -18,7 +18,7 @@ import {
 } from '@/engine'
 import { useGameStore } from '@/shared/gameStore'
 
-import ConfirmButton from './ConfirmButton.vue'
+import ConfirmButton from '@/shared/ConfirmButton.vue'
 import FinalPanel from './FinalPanel.vue'
 import RankingAnswers from './RankingAnswers.vue'
 import TimerControl from './TimerControl.vue'

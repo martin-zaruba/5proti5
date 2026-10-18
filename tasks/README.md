@@ -31,7 +31,7 @@ Priority: **P1** = potrebné pre MVP, **P2** = kompletná hra, **P3** = rozšír
 | T-008 | [UI – tabuľa pre publikum](done/T-008-tabula-pre-publikum.md) | P1 | T-003 | done |
 | T-009 | [Časovače a zvuky](done/T-009-casovace-a-zvuky.md) | P2 | T-007, T-008 | done |
 | T-010 | [Buzzery](todo/T-010-buzzery.md) | P3 | T-007 | todo |
-| T-011 | [Editor otázok](todo/T-011-editor-otazok.md) | P2 | T-002 | todo |
+| T-011 | [Editor otázok](done/T-011-editor-otazok.md) | P2 | T-002 | done |
 | T-012 | [Profil 2022 a 1 proti 1](todo/T-012-profil-2022-1proti1.md) | P3 | T-003, T-006 | todo |
 
 **MVP** = T-001 až T-004 + T-007 + T-008 (odohrateľné kolá 1–5 s panelom a tabuľou).

@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 
-import sampleSet from '../../../data/ukazkova-sada.json'
 import { PROFILE_2026, parseQuestionSet, type ParseResult, type TeamSetup } from '@/engine'
 import { useGameStore } from '@/shared/gameStore'
+import { toDraft } from '@/shared/questionDrafts'
+import { useQuestionLibrary } from '@/shared/questionLibrary'
 import { loadJson, saveJson } from '@/shared/storage'
 
 const store = useGameStore()
@@ -22,23 +23,27 @@ const teams = reactive<[TeamSetup, TeamSetup]>(
 )
 watch(teams, (value) => saveJson('setup-teams', value), { deep: true })
 
-const rawSet = ref<unknown>(loadJson('question-set') ?? sampleSet)
-const result = computed<ParseResult>(() => parseQuestionSet(rawSet.value))
+/* Question set from the library (T-011); the editor prepares the sets. */
+const library = useQuestionLibrary()
+const selected = computed(() => library.find(library.selectedId.value))
+const result = computed<ParseResult>(() =>
+  selected.value ? parseQuestionSet(selected.value.set) : { issues: [] },
+)
 const errors = computed(() => result.value.issues.filter((i) => i.severity === 'error'))
 const warnings = computed(() => result.value.issues.filter((i) => i.severity === 'warning'))
+const isPlayable = (set: unknown) => parseQuestionSet(set).set !== undefined
 const fileError = ref<string | null>(null)
 
-function useRawSet(raw: unknown) {
-  rawSet.value = raw
-  fileError.value = null
-  if (parseQuestionSet(raw).set) saveJson('question-set', raw)
-}
-
 async function onFile(event: Event) {
-  const file = (event.target as HTMLInputElement).files?.[0]
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
   if (!file) return
+  fileError.value = null
   try {
-    useRawSet(JSON.parse(await file.text()))
+    const draft = toDraft(JSON.parse(await file.text()))
+    if (!draft) throw new Error()
+    library.selectedId.value = library.add(draft)
   } catch {
     fileError.value = `Súbor „${file.name}“ nie je platný JSON.`
   }
@@ -89,20 +94,36 @@ function start() {
     <section class="space-y-3 rounded-xl border border-slate-700 p-4">
       <h2 class="text-xl font-bold">Sada otázok</h2>
       <div class="flex flex-wrap items-center gap-3">
-        <button class="btn bg-slate-700" @click="useRawSet(sampleSet)">Použiť ukážkovú sadu</button>
+        <select v-model="library.selectedId.value" class="input mt-0 w-auto min-w-64">
+          <option v-for="e in library.entries.value" :key="e.id" :value="e.id">
+            {{ e.set.name }}{{ isPlayable(e.set) ? '' : ' (má chyby)' }}
+          </option>
+        </select>
+        <RouterLink
+          class="btn bg-slate-700"
+          :to="{
+            path: '/editor',
+            query: library.selectedId.value ? { id: library.selectedId.value } : {},
+          }"
+        >
+          Upraviť v editore
+        </RouterLink>
         <label class="btn cursor-pointer bg-slate-700">
           Načítať JSON…
           <input type="file" accept=".json,application/json" class="hidden" @change="onFile" />
         </label>
-        <span v-if="result.set" class="text-slate-300">
-          „{{ result.set.name }}“ – {{ result.set.rounds.length }} kôl,
-          {{ result.set.reserve.length }} rezervných otázok
-        </span>
       </div>
+      <p v-if="result.set" class="text-slate-300">
+        {{ result.set.rounds.length }} kôl{{ result.set.ranking ? ', Zoraďovačka' : '' }},
+        {{ result.set.final.length }} finálových a {{ result.set.reserve.length }} rezervných otázok
+      </p>
+      <p v-else-if="!selected" class="text-amber-400">
+        Knižnica je prázdna – vytvor sadu v editore.
+      </p>
       <p v-if="fileError" class="text-red-400">{{ fileError }}</p>
       <ul v-if="errors.length" class="space-y-1 text-sm text-red-400">
         <li v-for="issue in errors" :key="issue.path + issue.message">
-          <code class="text-red-300">{{ issue.path }}</code> – {{ issue.message }}
+          {{ issue.message }} <code class="text-red-300/70">({{ issue.path }})</code>
         </li>
       </ul>
       <ul v-if="warnings.length" class="space-y-1 text-sm text-amber-400">
