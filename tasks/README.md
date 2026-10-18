@@ -22,7 +22,7 @@ Priority: **P1** = potrebné pre MVP, **P2** = kompletná hra, **P3** = rozšír
 | ID | Názov | Priorita | Závisí od | Stav |
 |---|---|---|---|---|
 | T-001 | [Potvrdiť stack a inicializovať projekt](done/T-001-technologicky-stack.md) | P1 | – | done |
-| T-002 | [Dátový model a formát sady otázok](todo/T-002-datovy-model-otazok.md) | P1 | T-001 | todo |
+| T-002 | [Dátový model a formát sady otázok](done/T-002-datovy-model-otazok.md) | P1 | T-001 | done |
 | T-003 | [Herný engine – bežné kolo](todo/T-003-herny-engine-bezne-kolo.md) | P1 | T-002 | todo |
 | T-004 | [Undo, anulovanie, ručná korekcia](todo/T-004-undo-anulovanie.md) | P1 | T-003 | todo |
 | T-005 | [Engine – Zoraďovačka](todo/T-005-zoradovacka.md) | P2 | T-003 | todo |
