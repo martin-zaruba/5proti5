@@ -5,6 +5,7 @@ import type { BoardView } from '@/engine'
 import { subscribeToBoard } from '@/shared/boardSync'
 
 import AnswerTile from './AnswerTile.vue'
+import FinalBoard from './FinalBoard.vue'
 
 const view = ref<BoardView | null>(null)
 const round = computed(() => view.value?.round ?? null)
@@ -114,7 +115,22 @@ const TEAM_TEXT = ['text-sky-300', 'text-orange-300'] as const
         <p class="text-[4cqw] font-black tabular-nums">
           {{ view.teams[0]!.score }} : {{ view.teams[1]!.score }}
         </p>
+        <p v-if="view.final?.prize" class="text-[3cqw] font-bold text-amber-300">
+          Finále {{ view.final.total }} b. ·
+          {{
+            view.final.prize.kind === 'none'
+              ? 'bez výhry'
+              : `výhra ${view.final.prize.euros.toLocaleString('sk-SK')} €`
+          }}
+        </p>
       </div>
+
+      <!-- Final -->
+      <FinalBoard
+        v-else-if="view.phase === 'final' && view.final"
+        :final="view.final"
+        :team-name="view.teams[view.final.team]!.name"
+      />
 
       <!-- Round or Zoraďovačka -->
       <div v-else-if="stage" class="flex h-full flex-col gap-[1.5cqw] p-[2.5cqw]">

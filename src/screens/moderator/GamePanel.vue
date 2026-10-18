@@ -2,12 +2,15 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import {
+  canPlayFinal,
   currentTurns,
+  finalTotal,
   isLastRound,
   isTieAfterLastRound,
   leadsToRanking,
   MAX_STRIKES,
   otherTeam,
+  prizeLabel,
   requireProfile,
   type GameAction,
   type GameState,
@@ -16,6 +19,7 @@ import {
 import { useGameStore } from '@/shared/gameStore'
 
 import ConfirmButton from './ConfirmButton.vue'
+import FinalPanel from './FinalPanel.vue'
 import RankingAnswers from './RankingAnswers.vue'
 
 const store = useGameStore()
@@ -67,6 +71,13 @@ const status = computed(() => {
         : 'Zoraďovačka – skóre je rovnaké, vyber družstvo, ktoré začína.'
     case 'rankingEnd':
       return `Zoraďovačka je kompletná – ${teamName(ranking.value!.winner!)} získava ${ranking.value!.bank} b.`
+    case 'final': {
+      const f = state.value.final!
+      if (f.step === 'choosePlayers')
+        return `Finále – kapitán družstva ${teamName(f.team)} vyberá dvoch hráčov`
+      if (f.step === 'done') return `Finále skončilo – ${prizeLabel(f.prize!)}`
+      return `Finále – odpovedá ${player(turn!.team, turn!.position)}`
+    }
     default:
       return `Koniec hry – vyhráva ${teamName(state.value.winner!)}`
   }
@@ -96,15 +107,22 @@ const canMiss = computed(
     phase.value === 'steal' ||
     (phase.value === 'ranking' && ranking.value?.control !== null),
 )
-const canAdvance = computed(() => ['intro', 'roundEnd', 'rankingEnd'].includes(phase.value))
+const canAdvance = computed(
+  () =>
+    ['intro', 'roundEnd', 'rankingEnd'].includes(phase.value) ||
+    (phase.value === 'final' && state.value.final?.step === 'done'),
+)
 const tie = computed(() => isTieAfterLastRound(state.value))
 const nextLabel = computed(() => {
   if (phase.value === 'intro') return 'Spustiť 1. kolo'
   if (phase.value === 'rankingEnd') return `Spustiť ${profile.value.ranking!.afterRound + 1}. kolo`
+  if (phase.value === 'final') return 'Ukončiť hru'
   if (tie.value) return 'Remíza – opakovať 5. kolo'
   const set = store.session.value!.questionSet
   if (round.value && leadsToRanking(state.value, round.value, set)) return 'Spustiť Zoraďovačku'
-  if (round.value && isLastRound(state.value, round.value)) return 'Ukončiť hru'
+  if (round.value && isLastRound(state.value, round.value)) {
+    return canPlayFinal(profile.value, set.final) ? 'Spustiť finále' : 'Ukončiť hru'
+  }
   return `Spustiť ${(round.value?.number ?? 0) + 1}. kolo`
 })
 
@@ -212,6 +230,13 @@ const time = (iso: string) => new Date(iso).toLocaleTimeString('sk-SK')
           <div class="text-sm font-bold text-amber-400">Zoraďovačka ×1</div>
           <div class="text-3xl font-black tabular-nums">séria {{ ranking.bank }}</div>
         </template>
+        <template v-else-if="state.final">
+          <div class="text-sm text-slate-400">Finále</div>
+          <div class="text-sm font-bold text-amber-400">Veľké peniaze</div>
+          <div class="text-3xl font-black tabular-nums">
+            {{ finalTotal(state.final) }} / {{ profile.final!.target }}
+          </div>
+        </template>
         <div v-else class="text-slate-400">Úvod</div>
       </div>
     </section>
@@ -222,7 +247,7 @@ const time = (iso: string) => new Date(iso).toLocaleTimeString('sk-SK')
       :class="
         phase === 'steal'
           ? 'bg-red-900/60'
-          : phase === 'roundEnd' || phase === 'rankingEnd'
+          : phase === 'roundEnd' || phase === 'rankingEnd' || state.final?.step === 'done'
             ? 'bg-emerald-900/60'
             : 'bg-slate-800'
       "
@@ -297,6 +322,7 @@ const time = (iso: string) => new Date(iso).toLocaleTimeString('sk-SK')
           </ol>
         </template>
         <RankingAnswers v-else-if="ranking" />
+        <FinalPanel v-else-if="state.final && phase === 'final'" />
 
         <!-- Main controls -->
         <div class="flex flex-wrap gap-2 pt-2">
@@ -349,6 +375,9 @@ const time = (iso: string) => new Date(iso).toLocaleTimeString('sk-SK')
             <p class="text-2xl font-black text-amber-400">
               Víťaz: {{ teamName(state.winner!) }} ({{ state.teams[state.winner!].score }} :
               {{ state.teams[otherTeam(state.winner!)].score }})
+            </p>
+            <p v-if="state.final?.prize" class="text-xl font-bold">
+              Finále: {{ finalTotal(state.final) }} b. – {{ prizeLabel(state.final.prize) }}
             </p>
           </template>
         </div>

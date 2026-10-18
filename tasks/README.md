@@ -26,7 +26,7 @@ Priority: **P1** = potrebné pre MVP, **P2** = kompletná hra, **P3** = rozšír
 | T-003 | [Herný engine – bežné kolo](done/T-003-herny-engine-bezne-kolo.md) | P1 | T-002 | done |
 | T-004 | [Undo, anulovanie, ručná korekcia](done/T-004-undo-anulovanie.md) | P1 | T-003 | done |
 | T-005 | [Engine – Zoraďovačka](done/T-005-zoradovacka.md) | P2 | T-003 | done |
-| T-006 | [Engine – finále](todo/T-006-finale.md) | P2 | T-003 | todo |
+| T-006 | [Engine – finále](done/T-006-finale.md) | P2 | T-003 | done |
 | T-007 | [UI – moderátorský panel](done/T-007-moderatorsky-panel.md) | P1 | T-003, T-004 | done |
 | T-008 | [UI – tabuľa pre publikum](done/T-008-tabula-pre-publikum.md) | P1 | T-003 | done |
 | T-009 | [Časovače a zvuky](todo/T-009-casovace-a-zvuky.md) | P2 | T-007, T-008 | todo |

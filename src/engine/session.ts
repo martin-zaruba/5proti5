@@ -5,6 +5,7 @@
 
 import { gameReducer, isTieAfterLastRound, type GameAction, type GameState } from './game'
 import type { QuestionSet } from './questions'
+import { finalTotal, prizeLabel } from './final'
 import { rankingTarget } from './ranking'
 
 export interface LogEntry {
@@ -78,6 +79,10 @@ export function describeAction(before: GameState, action: GameAction, after: Gam
   const round = after.round
   const parts: string[] = []
 
+  if (before.phase === 'final' || after.phase === 'final') {
+    const text = describeFinal(before, action, after)
+    if (text) return text
+  }
   if (before.phase === 'ranking' || (action.type === 'nextRound' && after.phase === 'ranking')) {
     const text = describeRanking(before, action, after)
     if (text) return text
@@ -206,6 +211,49 @@ function describeRanking(before: GameState, action: GameAction, after: GameState
         ? `${text}; tabuľka je kompletná – ${team(ranking.winner!)} získava ${pts(ranking.bank)}`
         : text
     }
+    default:
+      return null
+  }
+}
+
+function describeFinal(before: GameState, action: GameAction, after: GameState): string | null {
+  const final = (after.final ?? before.final)!
+  const team = after.teams[final.team]!
+  const name = (position: number) => team.players[position - 1]
+  const player = final.step === 'playerB' ? 'B' : 'A'
+  const q = (i: number) => `otázka ${i + 1}`
+  switch (action.type) {
+    case 'nextRound':
+      return after.phase === 'final'
+        ? `Finále – Veľké peniaze hrá ${team.name} (${team.score} b.)`
+        : `Koniec hry – vyhráva ${team.name}, ${prizeLabel(final.prize!)}`
+    case 'finalChoosePlayers':
+      return `Finále: hráč A ${name(action.positions[0])}, hráč B ${name(action.positions[1])}`
+    case 'finalAnswer': {
+      const entry = final.answers[final.step === 'playerB' ? 1 : 0][action.question]
+      if (final.duplicateSignal !== before.final!.duplicateSignal) {
+        const survey = action.rank
+          ? final.questions[action.question]?.answers[action.rank - 1]
+          : undefined
+        const said = action.text.trim() || survey?.text || '…'
+        return `Finále, hráč B, ${q(action.question)}: „${said}“ – duplicita, musí povedať inú odpoveď`
+      }
+      return `Finále, hráč ${player}, ${q(action.question)}: „${entry!.text}“ (${pts(entry!.points)})`
+    }
+    case 'finalDuplicate':
+      return `Finále, hráč B, ${q(action.question)}: duplicita, musí povedať inú odpoveď`
+    case 'finalReveal': {
+      const who = before.final!.step === 'playerB' ? 1 : 0
+      const entry = final.answers[who][action.question]
+      const text = `Finále – odkrytá ${q(action.question)} hráča ${who ? 'B' : 'A'}: ${
+        entry ? `„${entry.text}“ ${pts(entry.points)}` : 'bez odpovede'
+      }`
+      return final.step === 'done'
+        ? `${text}; spolu ${pts(finalTotal(final))} – ${prizeLabel(final.prize!)}`
+        : text
+    }
+    case 'finalNextPlayer':
+      return `Finále: hráč A získal ${pts(finalTotal(final))}, nastupuje hráč B`
     default:
       return null
   }

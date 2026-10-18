@@ -1,5 +1,6 @@
 /**
- * Game engine – docs/pravidla.md §3, §5 and §8 here, Zoraďovačka (§4) in `ranking.ts`.
+ * Game engine – docs/pravidla.md §3, §5 and §8 here, Zoraďovačka (§4) in `ranking.ts`,
+ * the final (§6) in `final.ts`.
  * Pure logic: `gameReducer(state, action, questionSet) → newState`, no Vue/DOM.
  * Invalid actions throw `GameError` with a message for the host (in Slovak).
  */
@@ -13,6 +14,16 @@ import {
   type Team,
   type TeamIndex,
 } from './core'
+import {
+  canPlayFinal,
+  chooseFinalPlayers,
+  finalNextPlayer,
+  markFinalDuplicate,
+  recordFinalAnswer,
+  revealFinalAnswer,
+  startFinal,
+  type FinalState,
+} from './final'
 import type { RuleProfile, RuleProfileId } from './profiles'
 import type { Question, QuestionSet } from './questions'
 import {
@@ -26,7 +37,15 @@ import {
 export { GameError, otherTeam, requireProfile, type Team, type TeamIndex } from './core'
 
 export type Phase =
-  'intro' | 'faceOff' | 'play' | 'steal' | 'roundEnd' | 'ranking' | 'rankingEnd' | 'gameOver'
+  | 'intro'
+  | 'faceOff'
+  | 'play'
+  | 'steal'
+  | 'roundEnd'
+  | 'ranking'
+  | 'rankingEnd'
+  | 'final'
+  | 'gameOver'
 
 export interface RevealedAnswer {
   /** Team that found the answer; `null` = revealed by the host without points. */
@@ -76,6 +95,7 @@ export interface GameState {
   /** Current standard round; `null` before the game and during Zoraďovačka. */
   round: RoundState | null
   ranking: RankingState | null
+  final: FinalState | null
   /** How many reserve questions from the set were already used. */
   reserveUsed: number
   /** Whether the board shows the question text. */
@@ -98,6 +118,12 @@ export type GameAction =
   | { type: 'setShowQuestion'; show: boolean }
   | { type: 'chooseStartingTeam'; team: TeamIndex }
   | { type: 'rankingGuess'; rank: number }
+  | { type: 'finalChoosePlayers'; positions: [number, number] }
+  /** `question` is the index 0–4; `rank` = matched survey answer or `null` (0 points). */
+  | { type: 'finalAnswer'; question: number; text: string; rank: number | null }
+  | { type: 'finalDuplicate'; question: number }
+  | { type: 'finalReveal'; question: number }
+  | { type: 'finalNextPlayer' }
 
 export const MAX_STRIKES = 3
 
@@ -128,6 +154,7 @@ export function createGame(teams: [TeamSetup, TeamSetup], questionSet: QuestionS
     phase: 'intro',
     round: null,
     ranking: null,
+    final: null,
     reserveUsed: 0,
     showQuestion: true,
     strikeSignal: { seq: 0, count: 0 },
@@ -160,6 +187,10 @@ export function currentTurns(state: GameState): Turn[] {
   const ranking = state.ranking
   if (state.phase === 'ranking' && ranking?.control != null) {
     return [{ team: ranking.control, position: ranking.turnPosition! }]
+  }
+  const final = state.final
+  if (state.phase === 'final' && final?.positions && final.step !== 'done') {
+    return [{ team: final.team, position: final.positions[final.step === 'playerB' ? 1 : 0] }]
   }
   const round = state.round
   if (!round) return []
@@ -226,6 +257,16 @@ export function gameReducer(
       return chooseStartingTeam(state, action.team, profile)
     case 'rankingGuess':
       return rankingGuess(state, action.rank, profile)
+    case 'finalChoosePlayers':
+      return chooseFinalPlayers(state, action.positions, profile)
+    case 'finalAnswer':
+      return recordFinalAnswer(state, action.question, action.text, action.rank)
+    case 'finalDuplicate':
+      return markFinalDuplicate(state, action.question)
+    case 'finalReveal':
+      return revealFinalAnswer(state, action.question, profile)
+    case 'finalNextPlayer':
+      return finalNextPlayer(state)
     case 'penaltyConferring': {
       const round = requireRound(
         state,
@@ -253,6 +294,9 @@ export function gameReducer(
     case 'voidQuestion': {
       if (state.phase === 'ranking' || state.phase === 'rankingEnd') {
         throw new GameError('Zoraďovačka nemá náhradnú otázku – chybu oprav tlačidlom Späť.')
+      }
+      if (state.phase === 'final') {
+        throw new GameError('Finálové otázky sa neanulujú – chybu oprav tlačidlom Späť.')
       }
       const round = requireRound(
         state,
@@ -350,6 +394,10 @@ function nextRound(state: GameState, profile: RuleProfile, questionSet: Question
   if (state.phase === 'intro') {
     return startRound(state, 0, questionSet.rounds[0]!, profile, null)
   }
+  if (state.phase === 'final') {
+    if (state.final?.step !== 'done') throw new GameError('Finále ešte neskončilo.')
+    return { ...state, phase: 'gameOver' }
+  }
   if (state.phase === 'rankingEnd') {
     // Round numbers are 1-based, so the index of the round after Zoraďovačka equals `afterRound`.
     const index = profile.ranking!.afterRound
@@ -365,6 +413,7 @@ function nextRound(state: GameState, profile: RuleProfile, questionSet: Question
   }
   if (isTieAfterLastRound(state)) return replayRound(state, round, questionSet, 'tie')
   const winner: TeamIndex = state.teams[0].score > state.teams[1].score ? 0 : 1
+  if (canPlayFinal(profile, questionSet.final)) return startFinal(state, winner, questionSet.final)
   return { ...state, phase: 'gameOver', winner }
 }
 
@@ -406,6 +455,9 @@ function revealAnswer(
   questionSet: QuestionSet,
 ): GameState {
   const round = state.round
+  if (state.phase === 'final') {
+    throw new GameError('Vo finále sa odpovede odkrývajú v riadkoch finále.')
+  }
   if (state.phase === 'ranking' || state.phase === 'rankingEnd') {
     throw new GameError('V Zoraďovačke sa odpoveď zaraďuje ako tip družstva, nie odkrytím.')
   }

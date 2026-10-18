@@ -29,7 +29,9 @@ Dokumentácia a UI sú po slovensky, **kód (identifikátory) po anglicky**. Tá
 | dvojitá / trojitá šanca | `double` / `triple` | kolá s násobkom 2 / 3 |
 | finále, Veľké peniaze | `finalRound` / `fastMoney` | záverečné kolo dvoch hráčov |
 | Malé peniaze | `smallMoney` | výhra pri 100–199 bodoch vo finále |
-| duplicita | `duplicate` | rovnaká odpoveď hráča B ako A vo finále |
+| duplicita | `duplicate` (`finalDuplicate`, `duplicateSignal`) | rovnaká odpoveď hráča B ako A vo finále |
+| hráč A / hráč B (finále) | `positions[0]` / `positions[1]`, kroky `playerA` / `playerB` | dvaja hráči víťazného družstva vo finále |
+| výhra | `prize` (`big` / `small` / `none`) | výsledok finále v € |
 | 1 proti 1 | `oneOnOne` | štartovacie kolo (profil 2022) |
 | profil pravidiel | `ruleProfile` | `2026` / `2022` |
 | anulovanie otázky | `voidQuestion` | zrušenie otázky vrátane bodov |

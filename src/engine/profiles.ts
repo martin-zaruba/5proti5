@@ -26,6 +26,17 @@ export interface RuleProfile {
     /** Who starts on equal scores (OQ-03): the host decides, or the loser of the last round. */
     tieStarter: 'host' | 'lastRoundLoser'
   }
+  /** Final „Veľké peniaze“ (§6). */
+  final?: {
+    questionCount: number
+    /** Answer time in seconds for player A and player B. */
+    timeLimits: [number, number]
+    /** A + B points needed for the big prize. */
+    target: number
+    bigPrize: number
+    /** From this many points the team wins „Malé peniaze“ (its score in €). */
+    smallMoneyFrom: number
+  }
 }
 
 export const PROFILE_2026: RuleProfile = {
@@ -42,6 +53,13 @@ export const PROFILE_2026: RuleProfile = {
     { number: 5, multiplier: 3, stealIncludesAnswer: true, label: 'Piate kolo – trojitá šanca' },
   ],
   ranking: { afterRound: 3, tieStarter: 'host' },
+  final: {
+    questionCount: 5,
+    timeLimits: [20, 25],
+    target: 200,
+    bigPrize: 1500,
+    smallMoneyFrom: 100,
+  },
 }
 
 const PROFILES: Partial<Record<RuleProfileId, RuleProfile>> = { '2026': PROFILE_2026 }

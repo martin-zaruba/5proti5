@@ -29,14 +29,26 @@ export const RANKING_QUESTION: Question = {
   ],
 }
 
-/** Without `withRanking` the set has no Zoraďovačka question, so the game skips it. */
-export function makeSet(reserveCount = 3, withRanking = false): QuestionSet {
+/** Final questions have 6 answers worth 40, 25, 15, 10, 6 and 4 points (ranks 1–6). */
+export const FINAL_POINTS = [40, 25, 15, 10, 6, 4]
+
+const finalQuestion = (n: number): Question => ({
+  type: 'final',
+  text: `Finále ${n}`,
+  answers: FINAL_POINTS.map((points, i) => ({ text: `F${n} – odpoveď ${i + 1}`, points })),
+})
+
+/**
+ * Without `withRanking` / `withFinal` the set has no Zoraďovačka / final questions,
+ * so the game skips them.
+ */
+export function makeSet(reserveCount = 3, withRanking = false, withFinal = false): QuestionSet {
   return {
     name: 'Testovacia sada',
     ruleProfile: '2026',
     rounds: [1, 2, 3, 4, 5].map((n) => question(`Kolo ${n}`)),
     ranking: withRanking ? RANKING_QUESTION : undefined,
-    final: [],
+    final: withFinal ? [1, 2, 3, 4, 5].map(finalQuestion) : [],
     reserve: Array.from({ length: reserveCount }, (_, i) => question(`Rezerva ${i + 1}`)),
   }
 }

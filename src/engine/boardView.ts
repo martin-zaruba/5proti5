@@ -12,12 +12,18 @@ import {
   type RoundOutcome,
   type TeamIndex,
 } from './game'
+import { currentFinalPlayer, type FinalPrize, type FinalStep } from './final'
 import { rankingTarget } from './ranking'
 
 export interface BoardSlot {
   rank: number
   /** `null` while the answer is hidden. */
   answer: { text: string; points: number; scored: boolean } | null
+}
+
+export interface FinalCell {
+  text: string
+  points: number
 }
 
 export interface BoardView {
@@ -51,6 +57,20 @@ export interface BoardView {
     bank: number
     activeTeam: TeamIndex | null
     winner: TeamIndex | null
+  } | null
+  /** Final (§6). Only revealed answers; A's answers are off the board while B answers. */
+  final: {
+    team: TeamIndex
+    players: [string, string] | null
+    step: FinalStep
+    rows: { a: FinalCell | null; b: FinalCell | null }[]
+    /** Sum of the points visible on the board. */
+    total: number
+    target: number
+    /** Answer time of the current player in seconds. */
+    timeLimit: number | null
+    prize: FinalPrize | null
+    duplicateSignal: number
   } | null
   strikeSignal: { seq: number; count: number }
   winner: TeamIndex | null
@@ -88,6 +108,7 @@ export function toBoardView(state: GameState): BoardView {
       tie: isTieAfterLastRound(state),
     },
     ranking: toRankingView(state),
+    final: toFinalView(state),
     strikeSignal: state.strikeSignal,
     winner: state.winner,
   }
@@ -116,5 +137,35 @@ function toRankingView(state: GameState): BoardView['ranking'] {
     bank: ranking.bank,
     activeTeam: ranking.control,
     winner: ranking.winner,
+  }
+}
+
+function toFinalView(state: GameState): BoardView['final'] {
+  const final = state.final
+  if (!final) return null
+  const config = requireProfile(state.profileId).final!
+  // §6: A's answers leave the board when B comes in; they return once B's answers are revealed.
+  const showA = final.step !== 'playerB' || final.revealed[1].some(Boolean)
+  const cell = (player: 0 | 1, i: number): FinalCell | null => {
+    if (!final.revealed[player][i] || (player === 0 && !showA)) return null
+    const entry = final.answers[player][i]
+    return entry ? { text: entry.text, points: entry.points } : { text: '', points: 0 }
+  }
+  const rows = final.questions.map((_, i) => ({ a: cell(0, i), b: cell(1, i) }))
+  const team = state.teams[final.team]
+  const answering = final.step === 'playerA' || final.step === 'playerB'
+  return {
+    team: final.team,
+    players: final.positions && [
+      team.players[final.positions[0] - 1]!,
+      team.players[final.positions[1] - 1]!,
+    ],
+    step: final.step,
+    rows,
+    total: rows.reduce((sum, row) => sum + (row.a?.points ?? 0) + (row.b?.points ?? 0), 0),
+    target: config.target,
+    timeLimit: answering ? config.timeLimits[currentFinalPlayer(final)] : null,
+    prize: final.prize,
+    duplicateSignal: final.duplicateSignal,
   }
 }

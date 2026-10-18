@@ -16,7 +16,7 @@ Obrazovka `/board` (fullscreen, 16:9) zobrazujúca stav hry, synchronizovaná s 
 - [x] skóre, bank kola, kolo + násobok, veľké X
 - [ ] časovač → presunuté do T-009 (časovače zatiaľ neexistujú)
 - [x] obrazovky: úvod, medzi kolami (výsledok kola na tabuli), víťaz
-- [ ] obrazovky Zoraďovačka a finále → spolu s T-005 (hotové) a T-006
+- [x] obrazovky Zoraďovačka a finále (T-005, T-006)
 - [x] tabuľa **nikdy** nedostane skryté odpovede (posielať iba odkryté dáta)
 
 ## Akceptačné kritériá
