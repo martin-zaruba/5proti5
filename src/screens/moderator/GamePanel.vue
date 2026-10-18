@@ -21,6 +21,7 @@ import { useGameStore } from '@/shared/gameStore'
 import ConfirmButton from './ConfirmButton.vue'
 import FinalPanel from './FinalPanel.vue'
 import RankingAnswers from './RankingAnswers.vue'
+import TimerControl from './TimerControl.vue'
 
 const store = useGameStore()
 // The panel is only rendered while a game exists.
@@ -148,6 +149,11 @@ function onKey(event: KeyboardEvent) {
     return
   }
   if (event.ctrlKey || event.metaKey || event.altKey) return
+  if (event.key === ' ') {
+    event.preventDefault()
+    store.toggleTimer()
+    return
+  }
   const key = event.key.toLowerCase()
   const digit = Number(key)
   if (phase.value === 'ranking' && ranking.value) {
@@ -402,6 +408,8 @@ const time = (iso: string) => new Date(iso).toLocaleTimeString('sk-SK')
           </label>
         </div>
 
+        <TimerControl />
+
         <div v-if="round && phase !== 'gameOver'" class="rounded-lg bg-slate-800 p-3">
           <ConfirmButton class="w-full bg-red-900" @confirm="act({ type: 'voidQuestion' })">
             Anulovať otázku (skóre spred kola + nová otázka)
@@ -462,6 +470,10 @@ const time = (iso: string) => new Date(iso).toLocaleTimeString('sk-SK')
               Zoraďovačka: <span class="kbd">1</span>–<span class="kbd">9</span> tip podľa poradia v
               zozname, <span class="kbd">A</span> / <span class="kbd">L</span> začínajúce družstvo
               pri rovnosti
+            </li>
+            <li>
+              <span class="kbd">Medzera</span> časovač (odpoveď 3 s: štart od začiatku; finále:
+              štart / pauza)
             </li>
             <li><span class="kbd">Ctrl+Z</span> späť</li>
           </ul>

@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import type { BoardView } from '@/engine'
-import { subscribeToBoard } from '@/shared/boardSync'
+import { subscribeToBoard, type BoardFeed } from '@/shared/boardSync'
+import { soundCues } from '@/shared/soundCues'
+import { createSoundPlayer } from '@/shared/sounds'
+import { viewRemainingMs } from '@/shared/timer'
 
 import AnswerTile from './AnswerTile.vue'
 import FinalBoard from './FinalBoard.vue'
+import TimerBadge from './TimerBadge.vue'
 
-const view = ref<BoardView | null>(null)
+const feed = ref<BoardFeed | null>(null)
+const view = computed(() => feed.value?.view ?? null)
 const round = computed(() => view.value?.round ?? null)
 const ranking = computed(() => view.value?.ranking ?? null)
 
@@ -37,6 +41,46 @@ watch(
   },
 )
 
+/* ---------- sounds: only the board window plays them (T-009) ---------- */
+const sounds = createSoundPlayer()
+const muted = computed(() => feed.value?.muted ?? false)
+const audioReady = ref(false)
+/** Browsers allow audio only after a click or key press in this window. */
+async function unlockAudio() {
+  await sounds.unlock()
+  audioReady.value = sounds.ready
+}
+watch(view, (next, prev) => {
+  if (muted.value) return
+  for (const cue of soundCues(prev, next)) sounds.play(cue)
+})
+
+/* ---------- countdown ---------- */
+const timer = computed(() => feed.value?.timer ?? null)
+const now = ref(Date.now())
+let frame = 0
+let expiredAt: number | null = null
+function tick() {
+  now.value = Date.now()
+  const t = timer.value
+  if (
+    t?.running &&
+    t.endsAt !== null &&
+    viewRemainingMs(t, now.value) === 0 &&
+    expiredAt !== t.endsAt
+  ) {
+    expiredAt = t.endsAt
+    if (!muted.value) sounds.play('timeUp')
+  }
+  frame = requestAnimationFrame(tick)
+}
+/** Answer timer shows only once started; the final timer is always visible during answers. */
+const showTimer = computed(() => {
+  const t = timer.value
+  if (!t) return false
+  return t.kind === 'final' || t.running || viewRemainingMs(t, now.value) < t.durationMs
+})
+
 const isFullscreen = ref(false)
 const onFullscreenChange = () => (isFullscreen.value = document.fullscreenElement !== null)
 const toggleFullscreen = () =>
@@ -46,13 +90,19 @@ const toggleFullscreen = () =>
 
 let unsubscribe = () => {}
 onMounted(() => {
-  unsubscribe = subscribeToBoard((v) => (view.value = v))
+  unsubscribe = subscribeToBoard((f) => (feed.value = f))
   document.addEventListener('fullscreenchange', onFullscreenChange)
+  window.addEventListener('pointerdown', unlockAudio)
+  window.addEventListener('keydown', unlockAudio)
+  frame = requestAnimationFrame(tick)
 })
 onUnmounted(() => {
   unsubscribe()
   clearTimeout(flashTimer)
+  cancelAnimationFrame(frame)
   document.removeEventListener('fullscreenchange', onFullscreenChange)
+  window.removeEventListener('pointerdown', unlockAudio)
+  window.removeEventListener('keydown', unlockAudio)
 })
 
 /** Ranks 1–3 in the left column, 4–6 in the right (like the TV board). */
@@ -130,6 +180,8 @@ const TEAM_TEXT = ['text-sky-300', 'text-orange-300'] as const
         v-else-if="view.phase === 'final' && view.final"
         :final="view.final"
         :team-name="view.teams[view.final.team]!.name"
+        :timer="showTimer ? timer : null"
+        :now="now"
       />
 
       <!-- Round or Zoraďovačka -->
@@ -151,12 +203,18 @@ const TEAM_TEXT = ['text-sky-300', 'text-orange-300'] as const
               {{ view.teams[t]!.score }}
             </div>
           </div>
-          <div class="order-2 flex flex-col items-center">
+          <div class="order-2 flex min-w-[30cqw] flex-col items-center">
             <div class="text-[1.8cqw] font-bold text-blue-200 uppercase">{{ stage.label }}</div>
             <div
-              class="score rounded-[1cqw] px-[3cqw] py-[0.6cqw] text-[5.5cqw] leading-none font-black text-amber-300 tabular-nums"
+              class="score relative rounded-[1cqw] px-[3cqw] py-[0.6cqw] text-[5.5cqw] leading-none font-black text-amber-300 tabular-nums"
             >
               {{ stage.bank }}
+              <TimerBadge
+                v-if="showTimer && timer"
+                :timer="timer"
+                :now="now"
+                class="absolute top-0 left-full ml-[1.5cqw] text-[3cqw]"
+              />
             </div>
             <div
               class="mt-[0.5cqw] flex h-[3cqw] gap-[0.8cqw] text-[3cqw] leading-none font-black text-red-500"
@@ -236,6 +294,13 @@ const TEAM_TEXT = ['text-sky-300', 'text-orange-300'] as const
           >
         </div>
       </Transition>
+
+      <button
+        v-if="!muted && !audioReady"
+        class="absolute bottom-[1cqw] left-[1cqw] rounded bg-white/15 px-3 py-1 text-sm transition hover:bg-white/30"
+      >
+        🔈 Klikni sem (alebo stlač kláves) pre zapnutie zvuku
+      </button>
 
       <button
         v-if="!isFullscreen"

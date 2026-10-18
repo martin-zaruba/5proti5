@@ -36,3 +36,6 @@ Dokumentácia a UI sú po slovensky, **kód (identifikátory) po anglicky**. Tá
 | profil pravidiel | `ruleProfile` | `2026` / `2022` |
 | anulovanie otázky | `voidQuestion` | zrušenie otázky vrátane bodov |
 | sada otázok | `questionSet` | súbor otázok na jeden diel |
+| časovač, limit | `timer`, `timeLimit` | odpočet 3 s na odpoveď, 20 s / 25 s vo finále |
+| zvukový signál | `SoundCue` | zvuk, ktorý zahrá tabuľa (buzzer, X, správne, koniec času …) |
+| stlmiť | `muted` | vypnutie zvukov tabule z panela |

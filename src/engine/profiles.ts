@@ -19,6 +19,8 @@ export interface RuleProfile {
   /** Players per team; position 1 stands closest to the host, the captain at the last position. */
   teamSize: number
   captainPosition: number
+  /** Seconds a player has for an answer after the host calls him (§1). */
+  answerTimeLimit: number
   standardRounds: StandardRoundDef[]
   /** Bonus round Zoraďovačka (§4), played after the given round number. */
   ranking?: {
@@ -45,6 +47,7 @@ export const PROFILE_2026: RuleProfile = {
   answersPerQuestion: { min: 4, max: 6 },
   teamSize: 5,
   captainPosition: 5,
+  answerTimeLimit: 3,
   standardRounds: [
     { number: 1, multiplier: 1, stealIncludesAnswer: false, label: 'Prvé kolo' },
     { number: 2, multiplier: 1, stealIncludesAnswer: false, label: 'Druhé kolo' },

@@ -9,3 +9,4 @@ Krátke záznamy o dôležitých rozhodnutiach – **prečo** sme niečo zvolili
 |---|---|---|
 | 0001 | [Technologický stack](0001-technologicky-stack.md) | prijaté |
 | 0002 | [Architektúra herného enginu](0002-architektura-enginu.md) | prijaté |
+| 0003 | [Časovače a zvuky mimo herného enginu](0003-casovace-a-zvuky.md) | prijaté |

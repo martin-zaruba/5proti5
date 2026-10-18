@@ -2,22 +2,30 @@
 import { computed, onUnmounted, ref, watch } from 'vue'
 
 import type { BoardView, FinalPrize } from '@/engine'
+import type { TimerView } from '@/shared/timer'
 
-const props = defineProps<{ final: NonNullable<BoardView['final']>; teamName: string }>()
+import TimerBadge from './TimerBadge.vue'
+
+const props = defineProps<{
+  final: NonNullable<BoardView['final']>
+  teamName: string
+  timer: TimerView | null
+  now: number
+}>()
 
 /* „Duplicita“ flash – only for duplicates that happen while the board is open. */
 const duplicateFlash = ref(false)
-let timer: ReturnType<typeof setTimeout> | undefined
+let flashTimeout: ReturnType<typeof setTimeout> | undefined
 watch(
   () => props.final.duplicateSignal,
   (seq, previous) => {
     if (seq <= previous) return
     duplicateFlash.value = true
-    clearTimeout(timer)
-    timer = setTimeout(() => (duplicateFlash.value = false), 1400)
+    clearTimeout(flashTimeout)
+    flashTimeout = setTimeout(() => (duplicateFlash.value = false), 1400)
   },
 )
-onUnmounted(() => clearTimeout(timer))
+onUnmounted(() => clearTimeout(flashTimeout))
 
 const euros = (n: number) => `${n.toLocaleString('sk-SK')} €`
 const prizeText = (prize: FinalPrize) =>
@@ -33,7 +41,7 @@ const subtitle = computed(() => {
   if (!f.players) return ''
   if (f.step === 'done') return `${f.players[0]} a ${f.players[1]}`
   const index = f.step === 'playerB' ? 1 : 0
-  return `Odpovedá ${f.players[index]} · ${f.timeLimit} sekúnd`
+  return `Odpovedá ${f.players[index]} · limit ${f.timeLimit} sekúnd`
 })
 </script>
 
@@ -67,7 +75,8 @@ const subtitle = computed(() => {
       </template>
     </section>
 
-    <footer class="flex items-center justify-center gap-[3cqw]">
+    <footer class="flex h-[6.5cqw] items-center justify-center gap-[3cqw]">
+      <TimerBadge v-if="timer" :timer="timer" :now="now" class="text-[3cqw]" />
       <div class="text-[2.4cqw] font-bold text-blue-200 uppercase">Spolu</div>
       <div
         class="score rounded-[1cqw] px-[3cqw] py-[0.4cqw] text-[5cqw] leading-none font-black tabular-nums text-amber-300"

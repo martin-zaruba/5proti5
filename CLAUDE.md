@@ -27,7 +27,7 @@ publikum sleduje tabuľu na projektore/TV.
 - Nepoužívaj originálne logo, grafiku ani zvuky z TV relácie (licencia FremantleMedia).
 
 ## Stav projektu
-Fáza: **celý diel odohrateľný** (kolá 1–5, Zoraďovačka, finále; panel + tabuľa); ďalej P2 úlohy T-009 (časovače, zvuky) a T-011 (editor). Stack: Vite + Vue 3 + TypeScript + Tailwind v4 (ADR 0001).
+Fáza: **celý diel odohrateľný** (kolá 1–5, Zoraďovačka, finále; panel + tabuľa); časovače a zvuky hotové; ďalej P2 úloha T-011 (editor). Stack: Vite + Vue 3 + TypeScript + Tailwind v4 (ADR 0001).
 
 ## Štruktúra kódu
 - `src/engine/` – herný engine (čistý TS, bez Vue/DOM), testy v `src/engine/__tests__/`
