@@ -42,5 +42,6 @@ Fáza: **celý diel odohrateľný** (kolá 1–5, Zoraďovačka, finále; panel 
 | `npm test` | jednorazový beh testov (Vitest); `npm run test:watch` = sledovanie zmien |
 | `npm run build` | typová kontrola (`vue-tsc`) + produkčný build do `dist/` |
 | `npm run preview` | spustí produkčný build lokálne |
+| `npm run build:single` | jeden HTML súbor `dist-single/5proti5.html` na spustenie bez servera (ADR 0004) |
 | `npm run lint` | Oxlint + ESLint (s automatickou opravou) |
 | `npm run format` | Prettier nad `src/` |

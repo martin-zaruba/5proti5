@@ -33,5 +33,6 @@ Priority: **P1** = potrebné pre MVP, **P2** = kompletná hra, **P3** = rozšír
 | T-010 | [Buzzery](todo/T-010-buzzery.md) | P3 | T-007 | todo |
 | T-011 | [Editor otázok](done/T-011-editor-otazok.md) | P2 | T-002 | done |
 | T-012 | [Profil 2022 a 1 proti 1](todo/T-012-profil-2022-1proti1.md) | P3 | T-003, T-006 | todo |
+| T-013 | [Zostavenie do jedného HTML súboru](done/T-013-jeden-html-subor.md) | P2 | T-007, T-008, T-011 | done |
 
 **MVP** = T-001 až T-004 + T-007 + T-008 (odohrateľné kolá 1–5 s panelom a tabuľou).

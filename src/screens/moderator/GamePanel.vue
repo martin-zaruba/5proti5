@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 import {
   canPlayFinal,
@@ -24,6 +25,7 @@ import RankingAnswers from './RankingAnswers.vue'
 import TimerControl from './TimerControl.vue'
 
 const store = useGameStore()
+const router = useRouter()
 // The panel is only rendered while a game exists.
 const state = computed(() => store.state.value as GameState)
 const round = computed(() => state.value.round)
@@ -136,7 +138,8 @@ function correct(sign: 1 | -1) {
 
 /* ---------- board window ---------- */
 function openBoard() {
-  window.open('/board', '5proti5-board', 'popup,width=1280,height=720')
+  // Through the router, so it works with web and hash (file://) URLs alike.
+  window.open(router.resolve('/board').href, '5proti5-board', 'popup,width=1280,height=720')
 }
 
 /* ---------- keyboard shortcuts ---------- */

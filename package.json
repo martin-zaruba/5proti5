@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "build-only": "vite build",
+    "build:single": "vite build --config vite.single.config.ts && node -e \"require('fs').renameSync('dist-single/index.html','dist-single/5proti5.html')\"",
     "type-check": "vue-tsc --build",
     "lint": "run-s \"lint:*\"",
     "lint:oxlint": "oxlint . --fix",
@@ -42,6 +43,7 @@
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.0",
     "vite": "^8.2.2",
+    "vite-plugin-singlefile": "^2.3.4",
     "vitest": "^4.1.11",
     "vue-eslint-parser": "^10.4.1",
     "vue-tsc": "^3.3.11"
