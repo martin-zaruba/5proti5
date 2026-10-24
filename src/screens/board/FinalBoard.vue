@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch } from 'vue'
 
-import type { BoardView, FinalPrize } from '@/engine'
+import type { BoardView } from '@/engine'
 import type { TimerView } from '@/shared/timer'
 
 import TimerBadge from './TimerBadge.vue'
@@ -26,14 +26,6 @@ watch(
   },
 )
 onUnmounted(() => clearTimeout(flashTimeout))
-
-const euros = (n: number) => `${n.toLocaleString('sk-SK')} €`
-const prizeText = (prize: FinalPrize) =>
-  prize.kind === 'big'
-    ? `Veľké peniaze · ${euros(prize.euros)}`
-    : prize.kind === 'small'
-      ? `Malé peniaze · ${euros(prize.euros)}`
-      : 'Tentokrát bez výhry'
 
 const subtitle = computed(() => {
   const f = props.final
@@ -84,14 +76,6 @@ const subtitle = computed(() => {
         {{ final.total }}
       </div>
       <div class="text-[2.4cqw] font-bold text-blue-200">cieľ {{ final.target }}</div>
-      <Transition name="fade">
-        <div
-          v-if="final.prize"
-          class="rounded-full bg-amber-300 px-[3cqw] py-[0.6cqw] text-[2.6cqw] font-black text-blue-950 uppercase"
-        >
-          {{ prizeText(final.prize) }}
-        </div>
-      </Transition>
     </footer>
 
     <Transition name="fade">

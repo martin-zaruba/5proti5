@@ -168,12 +168,7 @@ const TEAM_TEXT = ['text-sky-300', 'text-orange-300'] as const
           {{ view.teams[0]!.score }} : {{ view.teams[1]!.score }}
         </p>
         <p v-if="view.final?.prize" class="text-[3cqw] font-bold text-amber-300">
-          Finále {{ view.final.total }} b. ·
-          {{
-            view.final.prize.kind === 'none'
-              ? 'bez výhry'
-              : `výhra ${view.final.prize.euros.toLocaleString('sk-SK')} €`
-          }}
+          Finále {{ view.final.total }} bodov
         </p>
       </div>
 
