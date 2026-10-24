@@ -34,3 +34,5 @@ odohrať aj krátka hra len s kolami 1–3.
   - Nastavenie hry: voľby sa pamätajú v `localStorage` (`setup-options`); finále sa nedá zapnúť, ak ho sada
     nemá. Sada otázok musí mať aj tak 5 bežných kôl (validácia sady sa nemenila).
   - `gameStore` dopĺňa `options` do uloženej hry zo staršej verzie (aj do histórie undo).
+- 2026-10-25 – Nové nastavenie hry má predvolene vypnutú Zoraďovačku aj finále (len kolá 1–3); uložená voľba
+  moderátora v `setup-options` má prednosť. Engine (`createGame`) má naďalej predvolene celý diel.

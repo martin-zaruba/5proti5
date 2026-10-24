@@ -3,7 +3,6 @@ import { computed, reactive, ref, watch } from 'vue'
 
 import {
   canPlayFinal,
-  FULL_GAME,
   PROFILE_2026,
   parseQuestionSet,
   type GameOptions,
@@ -41,8 +40,12 @@ const errors = computed(() => result.value.issues.filter((i) => i.severity === '
 const warnings = computed(() => result.value.issues.filter((i) => i.severity === 'warning'))
 const isPlayable = (set: unknown) => parseQuestionSet(set).set !== undefined
 
-/* Which parts of the episode are played (T-014). */
-const options = reactive<GameOptions>({ ...FULL_GAME, ...loadJson<GameOptions>('setup-options') })
+/* Which parts of the episode are played (T-014); a new setup starts with the short game. */
+const options = reactive<GameOptions>({
+  ranking: false,
+  final: false,
+  ...loadJson<GameOptions>('setup-options'),
+})
 watch(options, (value) => saveJson('setup-options', value), { deep: true })
 const hasRanking = computed(() => result.value.set?.ranking !== undefined)
 const hasFinal = computed(() => !!result.value.set && canPlayFinal(profile, result.value.set.final))
