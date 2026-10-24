@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest'
 
+import { parseQuestionSet } from '@/engine'
+
 import {
+  addBuiltInSets,
+  BUILT_IN_SETS,
   copyName,
   removeEntry,
   SAMPLE_ID,
@@ -22,6 +26,28 @@ describe('question library', () => {
     const entries = seedLibrary(legacy, NOW)
     expect(entries.map((e) => e.set.name)).toEqual(['Ukážková sada', 'Moja sada'])
     expect(seedLibrary(sampleDraft(), NOW)).toHaveLength(1)
+  })
+
+  it('ships built-in sets that are complete and valid', () => {
+    for (const b of BUILT_IN_SETS) {
+      const { set, issues } = parseQuestionSet(b.draft())
+      expect({ id: b.id, issues }).toEqual({ id: b.id, issues: [] })
+      expect(set).toBeDefined()
+    }
+  })
+
+  it('adds a new built-in set to an existing library once', () => {
+    const own = { id: 'own', set: newSetTemplate('Moja sada'), updatedAt: NOW }
+    const first = addBuiltInSets([own], [SAMPLE_ID], NOW)
+    expect(first.entries.map((e) => e.id)).toEqual(['own', 'gls-sada'])
+    expect(first.offered).toEqual(BUILT_IN_SETS.map((b) => b.id))
+    // Deleted by the user → not added again.
+    expect(addBuiltInSets([own], first.offered, NOW).entries).toEqual([own])
+  })
+
+  it('a fresh library contains all built-in sets', () => {
+    const { entries } = addBuiltInSets(seedLibrary(null, NOW), [], NOW)
+    expect(entries.map((e) => e.set.name)).toEqual(['Ukážková sada', 'GLS sada'])
   })
 
   it('adds, replaces and removes entries', () => {

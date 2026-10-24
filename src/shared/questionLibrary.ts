@@ -5,6 +5,7 @@
 
 import { ref, watch } from 'vue'
 
+import glsSet from '../../data/gls-sada.json'
 import sampleSet from '../../data/ukazkova-sada.json'
 import type { QuestionSet } from '@/engine'
 
@@ -22,10 +23,18 @@ const LIBRARY_KEY = 'question-library'
 const SELECTED_KEY = 'selected-set-id'
 /** Set loaded in the game setup before the library existed (T-007). */
 const LEGACY_KEY = 'question-set'
+/** Ids of built-in sets already put into the library (so a deleted one does not come back). */
+const BUILT_IN_KEY = 'built-in-sets'
 
 export const SAMPLE_ID = 'ukazkova-sada'
 
-export const sampleDraft = (): QuestionSet => toDraft(sampleSet)!
+/** Sets shipped with the app (`data/`); the editor can add a fresh copy of any of them. */
+export const BUILT_IN_SETS = [
+  { id: SAMPLE_ID, draft: (): QuestionSet => toDraft(sampleSet)! },
+  { id: 'gls-sada', draft: (): QuestionSet => toDraft(glsSet)! },
+]
+
+export const sampleDraft = BUILT_IN_SETS[0]!.draft
 
 /** First start: the sample set, plus the set the user loaded before the library existed. */
 export function seedLibrary(legacy: unknown, now: string): LibraryEntry[] {
@@ -35,6 +44,21 @@ export function seedLibrary(legacy: unknown, now: string): LibraryEntry[] {
     entries.push({ id: 'predosla-sada', set: old, updatedAt: now })
   }
   return entries
+}
+
+/** Adds built-in sets that were never offered to this library (e.g. shipped in a later version). */
+export function addBuiltInSets(
+  entries: LibraryEntry[],
+  offered: string[],
+  now: string,
+): { entries: LibraryEntry[]; offered: string[] } {
+  const missing = BUILT_IN_SETS.filter(
+    (b) => !offered.includes(b.id) && !entries.some((e) => e.id === b.id),
+  )
+  return {
+    entries: [...entries, ...missing.map((b) => ({ id: b.id, set: b.draft(), updatedAt: now }))],
+    offered: BUILT_IN_SETS.map((b) => b.id),
+  }
 }
 
 export function upsertEntry(entries: LibraryEntry[], entry: LibraryEntry): LibraryEntry[] {
@@ -62,10 +86,17 @@ const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value))
 
 /* ---------- reactive store ---------- */
 
-const entries = ref<LibraryEntry[]>(
-  loadJson<LibraryEntry[]>(LIBRARY_KEY) ??
-    seedLibrary(loadJson(LEGACY_KEY), new Date().toISOString()),
-)
+function loadLibrary(): LibraryEntry[] {
+  const now = new Date().toISOString()
+  const stored = loadJson<LibraryEntry[]>(LIBRARY_KEY)
+  // Libraries created before BUILT_IN_KEY existed were seeded with the sample set only.
+  const offered = loadJson<string[]>(BUILT_IN_KEY) ?? (stored ? [SAMPLE_ID] : [])
+  const result = addBuiltInSets(stored ?? seedLibrary(loadJson(LEGACY_KEY), now), offered, now)
+  saveJson(BUILT_IN_KEY, result.offered)
+  return result.entries
+}
+
+const entries = ref<LibraryEntry[]>(loadLibrary())
 watch(entries, (value) => saveJson(LIBRARY_KEY, value), { deep: true, immediate: true })
 
 const selectedId = ref<string | null>(

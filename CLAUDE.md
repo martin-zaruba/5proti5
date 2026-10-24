@@ -33,7 +33,7 @@ Fáza: **celý diel odohrateľný** (kolá 1–5, Zoraďovačka, finále; panel 
 - `src/engine/` – herný engine (čistý TS, bez Vue/DOM), testy v `src/engine/__tests__/`
 - `src/screens/{moderator,board,editor}/` – obrazovky (routy `/moderator`, `/board`, `/editor`)
 - `src/shared/` – zdieľané veci UI (synchronizácia okien, persistencia)
-- `data/` – ukážková sada otázok (JSON); vlastné sady sú v knižnici editora (`localStorage`)
+- `data/` – vstavané sady otázok (JSON: ukážková, GLS), registrované v `BUILT_IN_SETS` (`src/shared/questionLibrary.ts`); vlastné sady sú v knižnici editora (`localStorage`)
 
 ## Príkazy
 | Príkaz | Čo robí |

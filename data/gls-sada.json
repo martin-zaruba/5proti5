@@ -1,0 +1,199 @@
+{
+  "name": "GLS sada",
+  "ruleProfile": "2026",
+  "rounds": [
+    {
+      "type": "standard",
+      "text": "Akú výhovorku povie študent, keď nemá domácu úlohu?",
+      "answers": [
+        { "text": "Zabudol som zošit doma", "points": 29, "aliases": ["zošit je doma", "nechal som ju doma"] },
+        { "text": "Nevedel som, že bola úloha", "points": 23, "aliases": ["nevedel som o nej"] },
+        { "text": "Bol som chorý", "points": 17, "aliases": ["chýbal som"] },
+        { "text": "Pes mi ju zjedol", "points": 13, "aliases": ["pes"] },
+        { "text": "Vybil sa mi mobil", "points": 9, "aliases": ["vybitý mobil"] },
+        { "text": "Robil som ju, ale nevyšla mi", "points": 5 }
+      ]
+    },
+    {
+      "type": "standard",
+      "text": "Čo urobí študent, keď učiteľ povie: „Vytiahnite si dvojhárok“?",
+      "answers": [
+        { "text": "Zbledne", "points": 27, "aliases": ["zľakne sa", "zamrzne"] },
+        { "text": "Pýta si papier od spolužiaka", "points": 22, "aliases": ["požičia si papier"] },
+        { "text": "Opýta sa, či sa to známkuje", "points": 18, "aliases": ["či to bude na známku"] },
+        { "text": "Začne sa modliť", "points": 14, "aliases": ["modlí sa"] },
+        { "text": "Spýta sa, či môže ísť na záchod", "points": 10, "aliases": ["ide na záchod", "WC"] }
+      ]
+    },
+    {
+      "type": "standard",
+      "text": "Kam sa študenti z gympla v Trenčíne vytratia cez voľnú hodinu?",
+      "answers": [
+        { "text": "Do bufetu", "points": 26, "aliases": ["bufet"] },
+        { "text": "Do obchodného centra", "points": 21, "aliases": ["nákupné centrum", "Laugaricio", "Max"] },
+        { "text": "Na Mierové námestie", "points": 17, "aliases": ["námestie", "do mesta"] },
+        { "text": "K Váhu", "points": 12, "aliases": ["na nábrežie", "na rieku"] },
+        { "text": "Do kaviarne", "points": 9, "aliases": ["na kávu"] },
+        { "text": "Domov spať", "points": 6, "aliases": ["domov"] }
+      ]
+    },
+    {
+      "type": "standard",
+      "text": "Čo povie učiteľ ako prvé, keď vojde do triedy?",
+      "answers": [
+        { "text": "Sadnite si", "points": 25, "aliases": ["dobrý deň, sadnite si"] },
+        { "text": "Kto chýba?", "points": 21, "aliases": ["kto dnes chýba", "triedna kniha"] },
+        { "text": "Prečo je tu taký hluk?", "points": 16, "aliases": ["ticho", "buďte ticho"] },
+        { "text": "Vyvetrajte", "points": 13, "aliases": ["otvorte okná", "je tu dusno"] },
+        { "text": "Odložte mobily", "points": 10, "aliases": ["mobily preč"] },
+        { "text": "Ideme skúšať", "points": 7, "aliases": ["skúšanie", "kto ide k tabuli"] }
+      ]
+    },
+    {
+      "type": "standard",
+      "text": "Čo by robil Ľudovít Štúr, keby bol dnes študentom nášho gymnázia?",
+      "answers": [
+        { "text": "Mal by Instagram", "points": 24, "aliases": ["sociálne siete", "bol by influencer", "TikTok"] },
+        { "text": "Viedol by školský časopis", "points": 19, "aliases": ["písal by do novín", "časopis"] },
+        { "text": "Opravoval by učiteľom pravopis", "points": 16, "aliases": ["opravoval by slovenčinu"] },
+        { "text": "Bol by predseda študentskej rady", "points": 13, "aliases": ["študentská rada", "parlament"] },
+        { "text": "Chodil by s triedou na Devín", "points": 9, "aliases": ["Devín", "výlet na Devín"] },
+        { "text": "Recitoval by na každej akadémii", "points": 6, "aliases": ["recitoval by", "akadémia"] }
+      ]
+    }
+  ],
+  "ranking": {
+    "type": "ranking",
+    "text": "Čo robia študenti najčastejšie cez prestávku?",
+    "answers": [
+      { "text": "Pozerajú do mobilu", "points": 31 },
+      { "text": "Stoja v rade v bufete", "points": 22 },
+      { "text": "Odpisujú úlohu", "points": 16 },
+      { "text": "Ohovárajú učiteľov", "points": 12 },
+      { "text": "Učia sa na písomku", "points": 8 },
+      { "text": "Spia na lavici", "points": 5 }
+    ]
+  },
+  "final": [
+    {
+      "type": "final",
+      "text": "Z ktorého predmetu majú študenti najväčší strach?",
+      "answers": [
+        { "text": "Matematika", "points": 37, "aliases": ["matika"] },
+        { "text": "Fyzika", "points": 20 },
+        { "text": "Chémia", "points": 15 },
+        { "text": "Slovenčina", "points": 10, "aliases": ["slovenský jazyk", "sloh"] },
+        { "text": "Dejepis", "points": 7 },
+        { "text": "Telesná výchova", "points": 4, "aliases": ["telocvik", "telesná"] }
+      ]
+    },
+    {
+      "type": "final",
+      "text": "Čo nesmie chýbať v taške stredoškoláka?",
+      "answers": [
+        { "text": "Mobil", "points": 30, "aliases": ["telefón"] },
+        { "text": "Desiata", "points": 21, "aliases": ["jedlo", "bageta"] },
+        { "text": "Nabíjačka", "points": 15, "aliases": ["powerbanka"] },
+        { "text": "Peračník", "points": 11, "aliases": ["pero", "perá"] },
+        { "text": "Fľaša s vodou", "points": 8, "aliases": ["voda", "fľaša"] },
+        { "text": "Slúchadlá", "points": 5 }
+      ]
+    },
+    {
+      "type": "final",
+      "text": "Čo robíte na hodine, keď sa nudíte?",
+      "answers": [
+        { "text": "Pozerám do mobilu", "points": 33, "aliases": ["mobil"] },
+        { "text": "Spím", "points": 20, "aliases": ["driemem"] },
+        { "text": "Kreslím do zošita", "points": 14, "aliases": ["čmáram", "kreslím"] },
+        { "text": "Píšem si so spolužiakom", "points": 11, "aliases": ["posielam lístočky", "rozprávam sa"] },
+        { "text": "Pozerám z okna", "points": 8, "aliases": ["z okna"] },
+        { "text": "Počítam minúty do zvonenia", "points": 5, "aliases": ["čakám na zvonenie", "pozerám na hodiny"] }
+      ]
+    },
+    {
+      "type": "final",
+      "text": "Kam ide trieda z Trenčína na výlet?",
+      "answers": [
+        { "text": "Na Trenčiansky hrad", "points": 28, "aliases": ["hrad", "Trenčiansky hrad"] },
+        { "text": "Do Bratislavy", "points": 20, "aliases": ["Bratislava"] },
+        { "text": "Do Tatier", "points": 16, "aliases": ["Tatry", "na hory"] },
+        { "text": "Do Viedne", "points": 10, "aliases": ["Viedeň"] },
+        { "text": "Na Brezinu", "points": 8, "aliases": ["Brezina", "do lesoparku"] },
+        { "text": "Do aquaparku", "points": 6, "aliases": ["aquapark", "na kúpalisko"] }
+      ]
+    },
+    {
+      "type": "final",
+      "text": "Čo robí maturant večer pred maturitou?",
+      "answers": [
+        { "text": "Učí sa celú noc", "points": 31, "aliases": ["učí sa", "bifľuje"] },
+        { "text": "Panikári", "points": 22, "aliases": ["stresuje", "plače"] },
+        { "text": "Spí", "points": 14, "aliases": ["ide skoro spať"] },
+        { "text": "Ide von s kamošmi", "points": 10, "aliases": ["ide von", "oslavuje"] },
+        { "text": "Modlí sa", "points": 8 },
+        { "text": "Pozerá seriály", "points": 5, "aliases": ["Netflix", "seriál"] }
+      ]
+    }
+  ],
+  "reserve": [
+    {
+      "type": "standard",
+      "text": "Prečo študent mešká na prvú hodinu?",
+      "answers": [
+        { "text": "Zaspal", "points": 39, "aliases": ["nezobudil sa"] },
+        { "text": "Meškal autobus", "points": 24, "aliases": ["autobus", "vlak", "meškal vlak"] },
+        { "text": "Bola zápcha", "points": 12, "aliases": ["zápcha"] },
+        { "text": "Vrátil sa domov pre niečo", "points": 9, "aliases": ["zabudol niečo doma"] },
+        { "text": "Nezvonil mu budík", "points": 6, "aliases": ["budík"] }
+      ]
+    },
+    {
+      "type": "standard",
+      "text": "Čo robí trieda, keď učiteľ na chvíľu odíde?",
+      "answers": [
+        { "text": "Robí hluk", "points": 26, "aliases": ["kričí", "hučí"] },
+        { "text": "Vytiahne mobily", "points": 22, "aliases": ["mobily"] },
+        { "text": "Odpisuje", "points": 17, "aliases": ["odpisujú"] },
+        { "text": "Behá po triede", "points": 12, "aliases": ["behajú"] },
+        { "text": "Kreslí na tabuľu", "points": 8, "aliases": ["píše na tabuľu"] },
+        { "text": "Otvorí okno", "points": 5, "aliases": ["vetrá"] }
+      ]
+    },
+    {
+      "type": "standard",
+      "text": "Čo dostane učiteľ od triedy na Deň učiteľov?",
+      "answers": [
+        { "text": "Kvety", "points": 34, "aliases": ["kytica", "ruža"] },
+        { "text": "Bonboniéru", "points": 26, "aliases": ["čokoládu", "bonbóny"] },
+        { "text": "Kávu", "points": 12, "aliases": ["káva"] },
+        { "text": "Pohľadnicu", "points": 10, "aliases": ["prianie", "kartičku"] },
+        { "text": "Pokoj na hodine", "points": 6, "aliases": ["ticho", "dobré správanie"] }
+      ]
+    },
+    {
+      "type": "standard",
+      "text": "Čo sa najčastejšie stratí v školskej šatni?",
+      "answers": [
+        { "text": "Prezúvky", "points": 30, "aliases": ["papuče", "prezuvky"] },
+        { "text": "Čiapka", "points": 20, "aliases": ["čiapku"] },
+        { "text": "Rukavice", "points": 15 },
+        { "text": "Mikina", "points": 11, "aliases": ["mikinu"] },
+        { "text": "Kľúče", "points": 8, "aliases": ["kľúč"] },
+        { "text": "Desiata", "points": 6, "aliases": ["desiatu"] }
+      ]
+    },
+    {
+      "type": "standard",
+      "text": "Čo zaznie v školskom rozhlase?",
+      "answers": [
+        { "text": "Oznam o suplovaní", "points": 28, "aliases": ["suplovanie", "zmena rozvrhu"] },
+        { "text": "Gratulácia víťazom súťaže", "points": 21, "aliases": ["gratulácia", "olympiáda"] },
+        { "text": "Hľadá sa majiteľ stratenej veci", "points": 15, "aliases": ["stratené veci"] },
+        { "text": "Pozvánka na ples", "points": 11, "aliases": ["ples", "stužková"] },
+        { "text": "Hudba", "points": 8, "aliases": ["pesnička"] },
+        { "text": "Nikto mu nerozumie", "points": 5, "aliases": ["šum", "chrčanie"] }
+      ]
+    }
+  ]
+}

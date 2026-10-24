@@ -15,7 +15,7 @@ import {
   toDraft,
   toExport,
 } from '@/shared/questionDrafts'
-import { sampleDraft, useQuestionLibrary } from '@/shared/questionLibrary'
+import { BUILT_IN_SETS, useQuestionLibrary } from '@/shared/questionLibrary'
 
 import QuestionEditor from './QuestionEditor.vue'
 
@@ -58,7 +58,8 @@ function select(id: string | null) {
   router.replace({ query: id ? { id } : {} })
 }
 const create = () => select(library.add(newSetTemplate()))
-const restoreSample = () => select(library.add(sampleDraft()))
+const builtIns = BUILT_IN_SETS.map((b) => ({ id: b.id, name: b.draft().name, draft: b.draft }))
+const addBuiltIn = (draft: () => QuestionSet) => select(library.add(draft()))
 const duplicate = () => currentId.value && select(library.duplicate(currentId.value))
 function remove() {
   if (!currentId.value) return
@@ -155,7 +156,14 @@ const dateTime = (iso: string) =>
             @change="onImport"
           />
         </label>
-        <button class="btn bg-slate-700 text-sm" @click="restoreSample">+ Ukážková sada</button>
+        <button
+          v-for="b in builtIns"
+          :key="b.id"
+          class="btn bg-slate-700 text-sm"
+          @click="addBuiltIn(b.draft)"
+        >
+          + {{ b.name }}
+        </button>
       </div>
       <p v-if="importError" class="text-sm text-red-400" role="alert">{{ importError }}</p>
       <details class="text-sm text-slate-400">
