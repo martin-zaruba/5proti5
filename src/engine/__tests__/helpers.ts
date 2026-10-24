@@ -1,4 +1,4 @@
-import { createGame, type GameAction, type TeamIndex } from '../game'
+import { createGame, FULL_GAME, type GameAction, type GameOptions, type TeamIndex } from '../game'
 import type { Question, QuestionSet } from '../questions'
 import { createSession, dispatch, type GameSession } from '../session'
 
@@ -53,7 +53,7 @@ export function makeSet(reserveCount = 3, withRanking = false, withFinal = false
   }
 }
 
-export function newSession(set = makeSet()): GameSession {
+export function newSession(set = makeSet(), options: GameOptions = FULL_GAME): GameSession {
   const players = (prefix: string) => [1, 2, 3, 4, 5].map((n) => `${prefix}${n}`)
   const state = createGame(
     [
@@ -61,6 +61,7 @@ export function newSession(set = makeSet()): GameSession {
       { name: 'Červení', players: players('C') },
     ],
     set,
+    options,
   )
   return createSession(set, state, new Date('2026-10-18T10:00:00Z'))
 }

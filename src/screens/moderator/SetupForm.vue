@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 
-import { PROFILE_2026, parseQuestionSet, type ParseResult, type TeamSetup } from '@/engine'
+import {
+  canPlayFinal,
+  FULL_GAME,
+  PROFILE_2026,
+  parseQuestionSet,
+  type GameOptions,
+  type ParseResult,
+  type TeamSetup,
+} from '@/engine'
 import { useGameStore } from '@/shared/gameStore'
 import { toDraft } from '@/shared/questionDrafts'
 import { useQuestionLibrary } from '@/shared/questionLibrary'
@@ -32,6 +40,23 @@ const result = computed<ParseResult>(() =>
 const errors = computed(() => result.value.issues.filter((i) => i.severity === 'error'))
 const warnings = computed(() => result.value.issues.filter((i) => i.severity === 'warning'))
 const isPlayable = (set: unknown) => parseQuestionSet(set).set !== undefined
+
+/* Which parts of the episode are played (T-014). */
+const options = reactive<GameOptions>({ ...FULL_GAME, ...loadJson<GameOptions>('setup-options') })
+watch(options, (value) => saveJson('setup-options', value), { deep: true })
+const hasRanking = computed(() => result.value.set?.ranking !== undefined)
+const hasFinal = computed(() => !!result.value.set && canPlayFinal(profile, result.value.set.final))
+const afterRanking = profile.ranking!.afterRound
+const flow = computed(() => {
+  const last = profile.standardRounds.length
+  const parts = options.ranking
+    ? hasRanking.value
+      ? [`kolá 1–${afterRanking}`, 'Zoraďovačka', `kolá ${afterRanking + 1}–${last}`]
+      : [`kolá 1–${last}`]
+    : [`kolá 1–${afterRanking}`]
+  if (options.final && hasFinal.value) parts.push('finále')
+  return parts.join(' → ')
+})
 const fileError = ref<string | null>(null)
 
 async function onFile(event: Event) {
@@ -50,7 +75,7 @@ async function onFile(event: Event) {
 }
 
 function start() {
-  if (result.value.set) store.startGame(teams, result.value.set)
+  if (result.value.set) store.startGame(teams, result.value.set, options)
 }
 </script>
 
@@ -129,6 +154,41 @@ function start() {
       <ul v-if="warnings.length" class="space-y-1 text-sm text-amber-400">
         <li v-for="issue in warnings" :key="issue.path + issue.message">⚠ {{ issue.message }}</li>
       </ul>
+    </section>
+
+    <section class="space-y-3 rounded-xl border border-slate-700 p-4">
+      <h2 class="text-xl font-bold">Priebeh hry</h2>
+      <label class="flex items-start gap-3">
+        <input v-model="options.ranking" type="checkbox" class="mt-1 size-5 accent-amber-400" />
+        <span>
+          <span class="font-bold">Zoraďovačka a kolá {{ afterRanking + 1 }}–5</span>
+          <span class="block text-sm text-slate-400">
+            Bez nej sa hrajú len kolá 1–{{ afterRanking }}; pri remíze bez finále hra končí
+            nerozhodne.
+            <template v-if="result.set && !hasRanking">
+              Sada nemá otázku pre Zoraďovačku – kolá sa odohrajú bez nej.
+            </template>
+          </span>
+        </span>
+      </label>
+      <label class="flex items-start gap-3" :class="{ 'opacity-50': result.set && !hasFinal }">
+        <input
+          v-model="options.final"
+          type="checkbox"
+          class="mt-1 size-5 accent-amber-400"
+          :disabled="!!result.set && !hasFinal"
+        />
+        <span>
+          <span class="font-bold">Finále „Veľké peniaze“</span>
+          <span class="block text-sm text-slate-400">
+            <template v-if="result.set && !hasFinal">
+              Sada nemá {{ profile.final!.questionCount }} finálových otázok – finále sa nehrá.
+            </template>
+            <template v-else>Bez finále hra končí vyhlásením víťaza.</template>
+          </span>
+        </span>
+      </label>
+      <p class="text-slate-300">Priebeh: {{ flow }}</p>
     </section>
 
     <button

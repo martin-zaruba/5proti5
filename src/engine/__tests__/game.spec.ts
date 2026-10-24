@@ -1,6 +1,14 @@
 import { describe, it, expect } from 'vitest'
 
-import { createGame, currentTurns, GameError, type GameState } from '../game'
+import {
+  createGame,
+  currentTurns,
+  GameError,
+  isLastRound,
+  isTieAfterLastRound,
+  roundCount,
+  type GameState,
+} from '../game'
 import { dispatch } from '../session'
 import {
   A,
@@ -311,6 +319,74 @@ describe('after round 5 (§5)', () => {
     expect(round(s.state).replay).toBe('tie')
     expect(round(s.state).question.text).toBe('Rezerva 1')
     expect(scores(s.state)).toEqual(beforeRound5)
+  })
+})
+
+describe('game options (T-014)', () => {
+  const short = { ranking: false, final: false }
+  const fullSet = () => makeSet(3, true, true)
+
+  it('plays the full episode by default', () => {
+    const s = newSession(fullSet())
+    expect(s.state.options).toEqual({ ranking: true, final: true })
+    expect(roundCount(s.state)).toBe(5)
+  })
+
+  it('turns the final off when the set has no final questions', () => {
+    expect(newSession(makeSet(3, true, false)).state.options.final).toBe(false)
+  })
+
+  it('without Zoraďovačka and the final the game ends after round 3', () => {
+    let s = newSession(fullSet(), short)
+    expect(roundCount(s.state)).toBe(3)
+    s = run(s, ...clearRound(A), ...clearRound(B), ...clearRound(A))
+    expect(isLastRound(s.state, round(s.state))).toBe(true)
+    s = run(s, next)
+    expect(s.state.phase).toBe('gameOver')
+    expect(s.state.winner).toBe(A)
+    expect(s.state.ranking).toBeNull()
+    expect(s.state.final).toBeNull()
+  })
+
+  it('a tie after round 3 without the final ends as a draw', () => {
+    let s = run(newSession(fullSet(), short), ...clearRound(A), ...clearRound(B), ...clearRound(A))
+    s = run(s, { type: 'adjustScore', team: B, delta: 100 })
+    expect(scores(s.state)).toEqual([200, 200])
+    expect(isTieAfterLastRound(s.state)).toBe(false)
+    s = run(s, next)
+    expect(s.state.phase).toBe('gameOver')
+    expect(s.state.winner).toBeNull()
+    expect(s.log.at(-1)!.text).toBe('Koniec hry – remíza 200 : 200')
+  })
+
+  it('without Zoraďovačka but with the final the winner of round 3 goes to the final', () => {
+    let s = newSession(fullSet(), { ranking: false, final: true })
+    s = run(s, ...clearRound(A), ...clearRound(B), ...clearRound(B), next)
+    expect(s.state.phase).toBe('final')
+    expect(s.state.final!.team).toBe(B)
+  })
+
+  it('without Zoraďovačka but with the final a tie replays round 3 (§5)', () => {
+    let s = newSession(fullSet(), { ranking: false, final: true })
+    s = run(s, ...clearRound(A), ...clearRound(B), ...clearRound(A))
+    s = run(s, { type: 'adjustScore', team: B, delta: 100 })
+    expect(isTieAfterLastRound(s.state)).toBe(true)
+    s = run(s, next)
+    expect(s.state.phase).toBe('faceOff')
+    expect(round(s.state).number).toBe(3)
+    expect(round(s.state).replay).toBe('tie')
+  })
+
+  it('with Zoraďovačka but without the final the game ends after round 5', () => {
+    let s = newSession(fullSet(), { ranking: true, final: false })
+    s = run(s, ...clearRound(A), ...clearRound(B), ...clearRound(A), next)
+    expect(s.state.phase).toBe('ranking')
+    s = run(s, { type: 'rankingGuess', rank: 4 }, { type: 'rankingGuess', rank: 3 })
+    s = run(s, { type: 'rankingGuess', rank: 2 }, { type: 'rankingGuess', rank: 1 }, next)
+    s = run(s, ...clearRound(A).slice(1), ...clearRound(A), next)
+    expect(s.state.phase).toBe('gameOver')
+    expect(s.state.winner).toBe(A)
+    expect(s.state.final).toBeNull()
   })
 })
 

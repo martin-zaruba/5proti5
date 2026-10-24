@@ -88,8 +88,19 @@ export interface RoundState {
   replay: 'void' | 'noHit' | 'tie' | null
 }
 
+/** Which parts of the episode are played – chosen by the host when setting up the game. */
+export interface GameOptions {
+  /** Zoraďovačka and the rounds after it (4–5); off = the game ends after the 3rd round. */
+  ranking: boolean
+  /** Final „Veľké peniaze“ for the winning team. */
+  final: boolean
+}
+
+export const FULL_GAME: GameOptions = { ranking: true, final: true }
+
 export interface GameState {
   profileId: RuleProfileId
+  options: GameOptions
   teams: [Team, Team]
   phase: Phase
   /** Current standard round; `null` before the game and during Zoraďovačka. */
@@ -132,7 +143,20 @@ export interface TeamSetup {
   players: string[]
 }
 
-export function createGame(teams: [TeamSetup, TeamSetup], questionSet: QuestionSet): GameState {
+/** The final is played only when the set contains its questions; a profile without Zoraďovačka plays all rounds. */
+export function resolveOptions(options: GameOptions, questionSet: QuestionSet): GameOptions {
+  const profile = requireProfile(questionSet.ruleProfile)
+  return {
+    ranking: options.ranking || !profile.ranking,
+    final: options.final && canPlayFinal(profile, questionSet.final),
+  }
+}
+
+export function createGame(
+  teams: [TeamSetup, TeamSetup],
+  questionSet: QuestionSet,
+  options: GameOptions = FULL_GAME,
+): GameState {
   const profile = requireProfile(questionSet.ruleProfile)
   if (questionSet.rounds.length !== profile.standardRounds.length) {
     throw new GameError(`Sada otázok musí mať ${profile.standardRounds.length} bežných kôl.`)
@@ -150,6 +174,7 @@ export function createGame(teams: [TeamSetup, TeamSetup], questionSet: QuestionS
   }
   return {
     profileId: profile.id,
+    options: resolveOptions(options, questionSet),
     teams: [toTeam(teams[0], 0), toTeam(teams[1], 1)],
     phase: 'intro',
     round: null,
@@ -218,20 +243,33 @@ export function currentTurns(state: GameState): Turn[] {
   }
 }
 
-export const isLastRound = (state: GameState, round: RoundState) =>
-  round.index === requireProfile(state.profileId).standardRounds.length - 1
+/** Number of standard rounds played: all of them, or only those before Zoraďovačka when it is off. */
+export function roundCount(state: GameState): number {
+  const profile = requireProfile(state.profileId)
+  return state.options.ranking || !profile.ranking
+    ? profile.standardRounds.length
+    : profile.ranking.afterRound
+}
 
-/** Zoraďovačka follows this round (profile has it and the question set contains its question). */
+export const isLastRound = (state: GameState, round: RoundState) =>
+  round.index === roundCount(state) - 1
+
+/** Zoraďovačka follows this round (it is on, the profile has it and the set contains its question). */
 export const leadsToRanking = (state: GameState, round: RoundState, questionSet: QuestionSet) =>
+  state.options.ranking &&
   requireProfile(state.profileId).ranking?.afterRound === round.number &&
   questionSet.ranking !== undefined
 
-/** Round 5 ended with equal scores → it will be voided and replayed (§5). */
+/** A shortened game (rounds 1–3 only) without the final may end in a draw. */
+export const allowsDraw = (state: GameState) => !state.options.ranking && !state.options.final
+
+/** The last round ended with equal scores → it will be voided and replayed (§5). */
 export const isTieAfterLastRound = (state: GameState) =>
   state.phase === 'roundEnd' &&
   state.round !== null &&
   isLastRound(state, state.round) &&
-  state.teams[0].score === state.teams[1].score
+  state.teams[0].score === state.teams[1].score &&
+  !allowsDraw(state)
 
 /* ---------- reducer ---------- */
 
@@ -372,7 +410,7 @@ function replayRound(
   const messages = {
     void: 'Otázku treba nahradiť novou.',
     noHit: 'V súboji nikto netrafil – otázka sa anuluje.',
-    tie: 'Po 5. kole je remíza – kolo sa opakuje.',
+    tie: `Po ${round.number}. kole je remíza – kolo sa opakuje.`,
   }
   const { question, reserveUsed } = takeReserve(state, questionSet, messages[reason])
   const teams: [Team, Team] = [
@@ -412,8 +450,10 @@ function nextRound(state: GameState, profile: RuleProfile, questionSet: Question
     return startRound(state, index, questionSet.rounds[index]!, profile, null)
   }
   if (isTieAfterLastRound(state)) return replayRound(state, round, questionSet, 'tie')
-  const winner: TeamIndex = state.teams[0].score > state.teams[1].score ? 0 : 1
-  if (canPlayFinal(profile, questionSet.final)) return startFinal(state, winner, questionSet.final)
+  const [a, b] = state.teams.map((t) => t.score) as [number, number]
+  // A tie only gets here when a draw is allowed, i.e. without the final.
+  const winner: TeamIndex | null = a === b ? null : a > b ? 0 : 1
+  if (state.options.final && winner !== null) return startFinal(state, winner, questionSet.final)
   return { ...state, phase: 'gameOver', winner }
 }
 

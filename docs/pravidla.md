@@ -54,6 +54,14 @@ V kole N chodí k pultu hráč na pozícii N (piate kolo = kapitáni).
 | 5 | Piate kolo – trojitá šanca | ×3 |
 | F | Finále | – |
 
+### Skrátená hra (voľba aplikácie, nie štatútu)
+Moderátor pri nastavení hry môže vypnúť (T-014, `OQ-16`):
+- **Zoraďovačku** – spolu s ňou odpadnú aj kolá 4–5, hrajú sa len **kolá 1–3**;
+- **finále** – hra končí vyhlásením víťaza po poslednom kole.
+
+Remíza po poslednom kole: ak sa hrá finále alebo kolá 1–5, posledné kolo sa opakuje (§5).
+Skrátená hra (len kolá 1–3) **bez finále** môže skončiť **nerozhodne**.
+
 ---
 
 ## 3. Bežné kolo (kolá 1–5)

@@ -3,7 +3,6 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import {
-  canPlayFinal,
   currentTurns,
   finalTotal,
   isLastRound,
@@ -82,7 +81,9 @@ const status = computed(() => {
       return `Finále – odpovedá ${player(turn!.team, turn!.position)}`
     }
     default:
-      return `Koniec hry – vyhráva ${teamName(state.value.winner!)}`
+      return state.value.winner === null
+        ? 'Koniec hry – remíza'
+        : `Koniec hry – vyhráva ${teamName(state.value.winner)}`
   }
 })
 
@@ -120,11 +121,11 @@ const nextLabel = computed(() => {
   if (phase.value === 'intro') return 'Spustiť 1. kolo'
   if (phase.value === 'rankingEnd') return `Spustiť ${profile.value.ranking!.afterRound + 1}. kolo`
   if (phase.value === 'final') return 'Ukončiť hru'
-  if (tie.value) return 'Remíza – opakovať 5. kolo'
+  if (tie.value) return `Remíza – opakovať ${round.value!.number}. kolo`
   const set = store.session.value!.questionSet
   if (round.value && leadsToRanking(state.value, round.value, set)) return 'Spustiť Zoraďovačku'
   if (round.value && isLastRound(state.value, round.value)) {
-    return canPlayFinal(profile.value, set.final) ? 'Spustiť finále' : 'Ukončiť hru'
+    return state.value.options.final ? 'Spustiť finále' : 'Ukončiť hru'
   }
   return `Spustiť ${(round.value?.number ?? 0) + 1}. kolo`
 })
@@ -195,8 +196,13 @@ const time = (iso: string) => new Date(iso).toLocaleTimeString('sk-SK')
       <div
         v-for="t in [0, 1] as const"
         :key="t"
-        class="rounded-xl border-2 bg-slate-800 p-3 transition"
-        :class="[isActiveTeam(t) ? TEAM_BORDER[t] : 'border-transparent', t === 1 && 'order-3']"
+        class="rounded-xl border-4 bg-slate-800 p-3 transition"
+        :class="[
+          isActiveTeam(t)
+            ? 'border-emerald-400 shadow-[0_0_24px_rgb(52_211_153/0.5)]'
+            : 'border-transparent',
+          t === 1 && 'order-3',
+        ]"
       >
         <div class="flex items-baseline justify-between gap-2">
           <h2 class="truncate text-xl font-black" :class="TEAM_TEXT[t]">{{ teamName(t) }}</h2>
@@ -381,9 +387,12 @@ const time = (iso: string) => new Date(iso).toLocaleTimeString('sk-SK')
             {{ nextLabel }} <span class="kbd">N</span>
           </button>
           <template v-if="phase === 'gameOver'">
-            <p class="text-2xl font-black text-amber-400">
-              Víťaz: {{ teamName(state.winner!) }} ({{ state.teams[state.winner!].score }} :
-              {{ state.teams[otherTeam(state.winner!)].score }})
+            <p v-if="state.winner === null" class="text-2xl font-black text-amber-400">
+              Remíza ({{ state.teams[0].score }} : {{ state.teams[1].score }})
+            </p>
+            <p v-else class="text-2xl font-black text-amber-400">
+              Víťaz: {{ teamName(state.winner) }} ({{ state.teams[state.winner].score }} :
+              {{ state.teams[otherTeam(state.winner)].score }})
             </p>
             <p v-if="state.final?.prize" class="text-xl font-bold">
               Finále: {{ finalTotal(state.final) }} b. – {{ prizeLabel(state.final.prize) }}

@@ -119,7 +119,7 @@ const banner = computed(() => {
   const r = round.value
   if (!v || !r) return null
   if (v.phase === 'roundEnd') {
-    if (r.tie) return 'Remíza – 5. kolo sa opakuje s novou otázkou'
+    if (r.tie) return `Remíza – ${r.number}. kolo sa opakuje s novou otázkou`
     const verb = r.outcome === 'stolen' ? 'kradne' : 'získava'
     return `${v.teams[r.winner!]!.name} ${verb} ${r.bank} bodov`
   }
@@ -128,7 +128,6 @@ const banner = computed(() => {
   return null
 })
 
-const TEAM_RING = ['ring-sky-400', 'ring-orange-400'] as const
 const TEAM_TEXT = ['text-sky-300', 'text-orange-300'] as const
 </script>
 
@@ -158,10 +157,13 @@ const TEAM_TEXT = ['text-sky-300', 'text-orange-300'] as const
         v-else-if="view.phase === 'gameOver'"
         class="flex h-full flex-col items-center justify-center gap-[2cqw] text-center"
       >
-        <p class="text-[3cqw] font-bold text-blue-200 uppercase">Víťazom sa stáva</p>
-        <h1 class="logo text-[9cqw] leading-none font-black">
-          {{ view.teams[view.winner!]!.name }}
-        </h1>
+        <h1 v-if="view.winner === null" class="logo text-[9cqw] leading-none font-black">Remíza</h1>
+        <template v-else>
+          <p class="text-[3cqw] font-bold text-blue-200 uppercase">Víťazom sa stáva</p>
+          <h1 class="logo text-[9cqw] leading-none font-black">
+            {{ view.teams[view.winner]!.name }}
+          </h1>
+        </template>
         <p class="text-[4cqw] font-black tabular-nums">
           {{ view.teams[0]!.score }} : {{ view.teams[1]!.score }}
         </p>
@@ -190,11 +192,8 @@ const TEAM_TEXT = ['text-sky-300', 'text-orange-300'] as const
           <div
             v-for="t in [0, 1] as const"
             :key="t"
-            class="score rounded-[1cqw] px-[2cqw] py-[1cqw] ring-[0.35cqw] transition"
-            :class="[
-              stage.activeTeam === t ? TEAM_RING[t] : 'ring-transparent',
-              t === 1 ? 'order-3 text-right' : '',
-            ]"
+            class="score rounded-[1cqw] px-[2cqw] py-[1cqw] transition"
+            :class="[stage.activeTeam === t && 'active-team', t === 1 ? 'order-3 text-right' : '']"
           >
             <div class="truncate text-[2.2cqw] font-bold" :class="TEAM_TEXT[t]">
               {{ view.teams[t]!.name }}
@@ -323,6 +322,13 @@ const TEAM_TEXT = ['text-sky-300', 'text-orange-300'] as const
 .score {
   background: linear-gradient(180deg, rgb(30 58 138 / 0.9), rgb(23 37 84 / 0.9));
   box-shadow: inset 0 0.2cqw 0 rgb(255 255 255 / 0.12);
+}
+/* Team on turn: thick green frame with a glow (Tailwind's ring would lose to the box-shadow above). */
+.score.active-team {
+  box-shadow:
+    inset 0 0.2cqw 0 rgb(255 255 255 / 0.12),
+    0 0 0 0.6cqw #34d399,
+    0 0 3cqw 0.6cqw rgb(52 211 153 / 0.55);
 }
 .logo {
   background: linear-gradient(180deg, #fde68a, #f59e0b);

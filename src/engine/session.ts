@@ -35,11 +35,16 @@ export function createSession(
   now = new Date(),
 ): GameSession {
   const names = state.teams.map((t) => t.name).join(' vs. ')
+  const skipped = [
+    !state.options.ranking && 'bez Zoraďovačky (len kolá 1–3)',
+    !state.options.final && 'bez finále',
+  ].filter(Boolean)
+  const parts = [`sada „${questionSet.name}“`, ...skipped].join(', ')
   return {
     questionSet,
     state,
     past: [],
-    log: [{ at: now.toISOString(), text: `Nová hra: ${names} (sada „${questionSet.name}“)` }],
+    log: [{ at: now.toISOString(), text: `Nová hra: ${names} (${parts})` }],
   }
 }
 
@@ -91,7 +96,12 @@ export function describeAction(before: GameState, action: GameAction, after: Gam
   switch (action.type) {
     case 'nextRound':
       if (after.phase === 'gameOver') {
-        parts.push(`Koniec hry – vyhráva ${team(after.winner!)}`)
+        const [a, b] = after.teams.map((t) => t.score)
+        parts.push(
+          after.winner === null
+            ? `Koniec hry – remíza ${a} : ${b}`
+            : `Koniec hry – vyhráva ${team(after.winner)}`,
+        )
       } else if (round?.replay === 'tie') {
         parts.push(
           `Remíza po ${round.number}. kole – kolo sa anuluje a hrá sa znova s novou otázkou`,
@@ -175,7 +185,7 @@ export function describeAction(before: GameState, action: GameAction, after: Gam
     parts.push(
       `${outcomes[round.outcome!]} – bank ${pts(round.bank)} získava ${team(round.winner!)}`,
     )
-    if (isTieAfterLastRound(after)) parts.push('remíza – 5. kolo sa bude opakovať')
+    if (isTieAfterLastRound(after)) parts.push(`remíza – ${round.number}. kolo sa bude opakovať`)
   }
   return parts.join('; ')
 }

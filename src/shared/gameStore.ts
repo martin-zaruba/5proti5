@@ -10,12 +10,16 @@ import {
   createGame,
   createSession,
   dispatch,
+  FULL_GAME,
   GameError,
+  resolveOptions,
   timeLimit,
   toBoardView,
   undo as undoSession,
   type GameAction,
+  type GameOptions,
   type GameSession,
+  type GameState,
   type QuestionSet,
   type TeamSetup,
 } from '@/engine'
@@ -42,7 +46,16 @@ interface StoredSession {
 
 function loadSession(): GameSession | null {
   const stored = loadJson<StoredSession>(SESSION_KEY)
-  return stored?.version === SESSION_VERSION && stored.session?.state?.phase ? stored.session : null
+  if (stored?.version !== SESSION_VERSION || !stored.session?.state?.phase) return null
+  // Games saved before the setup had options (T-014) are full episodes.
+  const { session } = stored
+  const migrate = (state: GameState): GameState =>
+    state.options ? state : { ...state, options: resolveOptions(FULL_GAME, session.questionSet) }
+  return {
+    ...session,
+    state: migrate(session.state),
+    past: session.past.map((entry) => ({ ...entry, state: migrate(entry.state) })),
+  }
 }
 
 const session = shallowRef<GameSession | null>(loadSession())
@@ -119,8 +132,8 @@ export function useGameStore() {
       if (timer.value) timer.value = resetTimer(timer.value)
     },
 
-    startGame(teams: [TeamSetup, TeamSetup], questionSet: QuestionSet) {
-      run(() => createSession(questionSet, createGame(teams, questionSet)))
+    startGame(teams: [TeamSetup, TeamSetup], questionSet: QuestionSet, options: GameOptions) {
+      run(() => createSession(questionSet, createGame(teams, questionSet, options)))
     },
     act(action: GameAction) {
       run(() => (session.value ? dispatch(session.value, action) : null))
