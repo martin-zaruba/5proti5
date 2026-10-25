@@ -16,9 +16,13 @@ export interface RuleProfile {
   label: string
   /** Number of answers shown on the board for a standard question. */
   answersPerQuestion: { min: number; max: number }
-  /** Players per team; position 1 stands closest to the host, the captain at the last position. */
-  teamSize: number
-  captainPosition: number
+  /**
+   * Players per team (the statute has 5; fewer is an app option for small groups – §1, OQ-20).
+   * Position 1 stands closest to the host. Both teams have the same number.
+   */
+  teamSize: { min: number; max: number }
+  /** Where the captain stands: at the end of the line (2026) or at its head (2022). */
+  captain: 'last' | 'first'
   /** Seconds a player has for an answer after the host calls him (§1). */
   answerTimeLimit: number
   standardRounds: StandardRoundDef[]
@@ -45,8 +49,8 @@ export const PROFILE_2026: RuleProfile = {
   id: '2026',
   label: 'Štatút 2026 (STVR)',
   answersPerQuestion: { min: 4, max: 6 },
-  teamSize: 5,
-  captainPosition: 5,
+  teamSize: { min: 2, max: 5 },
+  captain: 'last',
   answerTimeLimit: 3,
   standardRounds: [
     { number: 1, multiplier: 1, stealIncludesAnswer: false, label: 'Prvé kolo' },

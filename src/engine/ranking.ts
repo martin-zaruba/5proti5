@@ -4,7 +4,15 @@
  * the bonus-round points and passes control. The team that completes the table wins its streak.
  */
 
-import { addScore, GameError, nextSignal, otherTeam, type TeamIndex } from './core'
+import {
+  addScore,
+  captainPosition,
+  GameError,
+  nextSignal,
+  otherTeam,
+  teamSize,
+  type TeamIndex,
+} from './core'
 import type { GameState } from './game'
 import type { RuleProfile } from './profiles'
 import type { Question } from './questions'
@@ -50,11 +58,13 @@ export function rankingStarter(
 }
 
 /** The captain answers first; then the player standing next to him, and so on (§4). */
-function nextRankingPosition(position: number, profile: RuleProfile): number {
-  const step = profile.captainPosition === profile.teamSize ? -1 : 1
-  const n = profile.teamSize
-  return ((position - 1 + step + n) % n) + 1
+function nextRankingPosition(position: number, profile: RuleProfile, size: number): number {
+  const step = profile.captain === 'last' ? -1 : 1
+  return ((position - 1 + step + size) % size) + 1
 }
+
+const captainOf = (state: GameState, profile: RuleProfile) =>
+  captainPosition(profile, teamSize(state.teams))
 
 export function startRanking(
   state: GameState,
@@ -80,7 +90,7 @@ export function startRanking(
       displayOrder,
       revealed: question.answers.map(() => null),
       control,
-      turnPosition: control === null ? null : profile.captainPosition,
+      turnPosition: control === null ? null : captainOf(state, profile),
       bank: 0,
       winner: null,
       scoreBefore: [state.teams[0].score, state.teams[1].score],
@@ -113,7 +123,7 @@ export function chooseStartingTeam(
   }
   return {
     ...state,
-    ranking: { ...ranking, control: team, turnPosition: profile.captainPosition },
+    ranking: { ...ranking, control: team, turnPosition: captainOf(state, profile) },
   }
 }
 
@@ -133,7 +143,7 @@ export function rankingGuess(state: GameState, rank: number, profile: RuleProfil
     ...ranking,
     revealed,
     bank: ranking.bank + answer.points,
-    turnPosition: nextRankingPosition(ranking.turnPosition!, profile),
+    turnPosition: nextRankingPosition(ranking.turnPosition!, profile, teamSize(state.teams)),
   }
   if (rankingTarget(next) !== null) return { ...state, ranking: next }
 
@@ -156,7 +166,7 @@ export function rankingMiss(state: GameState, profile: RuleProfile): GameState {
     ranking: {
       ...ranking,
       control: otherTeam(control),
-      turnPosition: profile.captainPosition,
+      turnPosition: captainOf(state, profile),
       bank: 0,
       revealed: ranking.revealed.map((r) => r && { ...r, counted: false }),
     },

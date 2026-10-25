@@ -29,6 +29,17 @@ V kole N chodí k pultu hráč na pozícii N (piate kolo = kapitáni).
 
 > Variant 2022: kapitán stojí **najbližšie** k moderátorovi (v čele radu) a do 1. kola idú kapitáni.
 
+### Menšie družstvá (voľba aplikácie, nie štatútu)
+Pri nastavení hry sa dá zvoliť **2 až 5 hráčov** v družstve (obe družstvá rovnako; predvolene 5 podľa štatútu)
+– `OQ-20`. Pravidlá sa prispôsobia takto:
+- **Kapitán** stojí na poslednej pozícii (pri 3 hráčoch na pozícii 3).
+- **K pultu** ide v kole N hráč na pozícii N; po kapitánovi sa rad opakuje od pozície 1
+  (3 hráči: kolá 1–5 → pozície 1, 2, 3, 1, 2; 2 hráči: 1, 2, 1, 2, 1).
+- **Súboj pri pulte bez zásahu** (§3.1 bod 5) pokračuje dvojicami od hráča zo súboja po kapitánov, potom sa
+  otázka anuluje – kolo, v ktorom idú k pultu kapitáni, má len jednu dvojicu.
+- Hra družstva s kontrolou, krádež (kapitán), Zoraďovačka (najprv kapitán, potom ďalší v rade) a výber
+  2 hráčov do finále fungujú rovnako, len v kratšom rade.
+
 ---
 
 ## 2. Štruktúra dielu (profil 2026)

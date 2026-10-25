@@ -53,8 +53,13 @@ export function makeSet(reserveCount = 3, withRanking = false, withFinal = false
   }
 }
 
-export function newSession(set = makeSet(), options: GameOptions = FULL_GAME): GameSession {
-  const players = (prefix: string) => [1, 2, 3, 4, 5].map((n) => `${prefix}${n}`)
+/** `size` = players per team (the statute has 5; 2–5 allowed – OQ-20). */
+export function newSession(
+  set = makeSet(),
+  options: GameOptions = FULL_GAME,
+  size = 5,
+): GameSession {
+  const players = (prefix: string) => Array.from({ length: size }, (_, i) => `${prefix}${i + 1}`)
   const state = createGame(
     [
       { name: 'Modrí', players: players('M') },

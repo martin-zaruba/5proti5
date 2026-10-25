@@ -7,10 +7,14 @@
 
 import {
   addScore,
+  captainPosition,
+  faceOffPosition,
   GameError,
+  nextPosition,
   nextSignal,
   otherTeam,
   requireProfile,
+  teamSize,
   type Team,
   type TeamIndex,
 } from './core'
@@ -34,7 +38,16 @@ import {
   type RankingState,
 } from './ranking'
 
-export { GameError, otherTeam, requireProfile, type Team, type TeamIndex } from './core'
+export {
+  captainPosition,
+  faceOffPosition,
+  GameError,
+  otherTeam,
+  requireProfile,
+  teamSize,
+  type Team,
+  type TeamIndex,
+} from './core'
 
 export type Phase =
   | 'intro'
@@ -161,10 +174,14 @@ export function createGame(
   if (questionSet.rounds.length !== profile.standardRounds.length) {
     throw new GameError(`Sada otázok musí mať ${profile.standardRounds.length} bežných kôl.`)
   }
+  const { min, max } = profile.teamSize
+  if (teams[0].players.length !== teams[1].players.length) {
+    throw new GameError('Obe družstvá musia mať rovnaký počet hráčov.')
+  }
   const toTeam = (setup: TeamSetup, i: number): Team => {
     const name = setup.name.trim() || `Družstvo ${i + 1}`
-    if (setup.players.length !== profile.teamSize) {
-      throw new GameError(`Družstvo „${name}“ musí mať ${profile.teamSize} hráčov.`)
+    if (setup.players.length < min || setup.players.length > max) {
+      throw new GameError(`Družstvo „${name}“ musí mať ${min} až ${max} hráčov.`)
     }
     return {
       name,
@@ -194,16 +211,14 @@ export interface Turn {
   position: number
 }
 
-const nextPosition = (position: number, profile: RuleProfile) => (position % profile.teamSize) + 1
-
-/** Who answers next in the face-off (§3.1, OQ-13): pairs from position N, buzzing team first. */
-function nextFaceOffTurn(round: RoundState): Turn | null {
+/** Who answers next in the face-off (§3.1, OQ-13): pairs from the round's position, buzzing team first. */
+function nextFaceOffTurn(round: RoundState, size: number): Turn | null {
   if (round.buzzed === null) return null
   const pair = Math.floor(round.attempts.length / 2)
   const first = round.attempts.length % 2 === 0
   return {
     team: first ? round.buzzed : otherTeam(round.buzzed),
-    position: round.number + pair,
+    position: faceOffPosition(round.number, size) + pair,
   }
 }
 
@@ -221,12 +236,14 @@ export function currentTurns(state: GameState): Turn[] {
   if (!round) return []
   switch (state.phase) {
     case 'faceOff': {
-      const turn = nextFaceOffTurn(round)
+      const size = teamSize(state.teams)
+      const turn = nextFaceOffTurn(round, size)
+      const position = faceOffPosition(round.number, size)
       return turn
         ? [turn]
         : [
-            { team: 0, position: round.number },
-            { team: 1, position: round.number },
+            { team: 0, position },
+            { team: 1, position },
           ]
     }
     case 'play':
@@ -235,7 +252,7 @@ export function currentTurns(state: GameState): Turn[] {
       return [
         {
           team: otherTeam(round.control!),
-          position: requireProfile(state.profileId).captainPosition,
+          position: captainPosition(requireProfile(state.profileId), teamSize(state.teams)),
         },
       ]
     default:
@@ -296,7 +313,7 @@ export function gameReducer(
     case 'rankingGuess':
       return rankingGuess(state, action.rank, profile)
     case 'finalChoosePlayers':
-      return chooseFinalPlayers(state, action.positions, profile)
+      return chooseFinalPlayers(state, action.positions)
     case 'finalAnswer':
       return recordFinalAnswer(state, action.question, action.text, action.rank)
     case 'finalDuplicate':
@@ -514,7 +531,7 @@ function revealAnswer(
       const control = round.control!
       const next = {
         ...reveal(round, rank, control, points),
-        turnPosition: nextPosition(round.turnPosition!, profile),
+        turnPosition: nextPosition(round.turnPosition!, teamSize(state.teams)),
       }
       return allRevealed(next)
         ? finishRound(state, next, control, 'cleared')
@@ -548,7 +565,11 @@ function miss(state: GameState, profile: RuleProfile, questionSet: QuestionSet):
       return {
         ...state,
         phase: strikes >= MAX_STRIKES ? 'steal' : 'play',
-        round: { ...round, strikes, turnPosition: nextPosition(round.turnPosition!, profile) },
+        round: {
+          ...round,
+          strikes,
+          turnPosition: nextPosition(round.turnPosition!, teamSize(state.teams)),
+        },
         strikeSignal: signal(state, strikes),
       }
     }
@@ -571,7 +592,8 @@ function faceOffAttempt(
   profile: RuleProfile,
   questionSet: QuestionSet,
 ): GameState {
-  const turn = nextFaceOffTurn(round)
+  const size = teamSize(state.teams)
+  const turn = nextFaceOffTurn(round, size)
   if (!turn) throw new GameError('Najprv zaznač, ktoré družstvo stlačilo tlačidlo prvé.')
 
   let next: RoundState = { ...round, attempts: [...round.attempts, { ...turn, rank }] }
@@ -584,7 +606,7 @@ function faceOffAttempt(
     const controlled: RoundState = {
       ...next,
       control: team,
-      turnPosition: nextPosition(position, profile),
+      turnPosition: nextPosition(position, size),
     }
     return allRevealed(controlled)
       ? finishRound(state, controlled, team, 'cleared')
@@ -603,7 +625,8 @@ function faceOffAttempt(
     const best = hits.reduce((a, b) => (b.rank! < a.rank! ? b : a))
     return gainControl(best.team, best.position)
   }
-  if (turn.position >= profile.teamSize) {
+  // Nobody hit up to the captain (the last pair) → new question (§3.1 point 5).
+  if (turn.position >= size) {
     return replayRound(state, next, questionSet, 'noHit')
   }
   return { ...state, round: next }

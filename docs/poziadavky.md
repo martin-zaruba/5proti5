@@ -9,7 +9,7 @@ sleduje tabuľu na projektore/TV.
 
 ### 1. Moderátorský panel (`/moderator`)
 Vidí všetko vrátane skrytých odpovedí. Ovládanie:
-- výber/načítanie sady otázok, nastavenie názvov družstiev a mien hráčov, voľba kapitána, profil pravidiel (2026/2022),
+- výber/načítanie sady otázok, nastavenie názvov družstiev a mien hráčov, počet hráčov v družstve (2–5), voľba kapitána, profil pravidiel (2026/2022),
 - priebeh hry: Zoraďovačka (s kolami 4–5) a finále sa dajú vypnúť – skrátená hra len s kolami 1–3,
 - spustenie kola, zobrazenie otázky, zaznamenanie, kto stlačil buzzer prvý,
 - **klik na odpoveď = odkrytie** (správna odpoveď), tlačidlo **X** (nesprávna), **čas vypršal**,
