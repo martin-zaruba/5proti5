@@ -35,7 +35,7 @@ Priority: **P1** = potrebné pre MVP, **P2** = kompletná hra, **P3** = rozšír
 | T-012 | [Profil 2022 a 1 proti 1](todo/T-012-profil-2022-1proti1.md) | P3 | T-003, T-006 | todo |
 | T-013 | [Zostavenie do jedného HTML súboru](done/T-013-jeden-html-subor.md) | P2 | T-007, T-008, T-011 | done |
 | T-014 | [Skrátená hra – voľba Zoraďovačky a finále](done/T-014-skratena-hra.md) | P2 | T-005, T-006, T-007 | done |
-| T-015 | [Synchronizačný protokol a transport v klientovi](todo/T-015-protokol-a-transport.md) | P3 | T-008 | todo |
+| T-015 | [Synchronizačný protokol a transport v klientovi](done/T-015-protokol-a-transport.md) | P3 | T-008 | done |
 | T-016 | [Server – Cloudflare Worker a miestnosť](todo/T-016-server-cloudflare.md) | P3 | T-015 | todo |
 | T-017 | [WebSocket transport v klientovi](todo/T-017-websocket-transport.md) | P3 | T-015, T-016 | todo |
 | T-018 | [Miestnosti v UI – hra na viacerých zariadeniach](todo/T-018-miestnosti-v-ui.md) | P3 | T-017 | todo |
