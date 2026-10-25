@@ -30,6 +30,9 @@ jobs:
         env:
           # The site lives under https://<user>.github.io/<repo>/.
           BASE_PATH: /${{ github.event.repository.name }}/
+          # Sync server for multi-device games (ADR 0006) – repository variable SYNC_URL,
+          # e.g. https://5proti5-sync.<subdomain>.workers.dev; empty = one-computer mode only.
+          VITE_SYNC_URL: ${{ vars.SYNC_URL }}
       # Pages has no SPA fallback: unknown paths (/board after a reload) get 404.html = the app.
       - run: cp dist/index.html dist/404.html
       - uses: actions/upload-pages-artifact@v3

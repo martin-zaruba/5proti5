@@ -25,4 +25,5 @@ dáta v `localStorage`), takže ju zvládne akýkoľvek bezplatný statický hos
 - Zadarmo len pre verejné repo (pri súkromnom treba platený GitHub alebo iný hosting).
 - `404.html` vracia HTTP stav 404 aj pre platné obrazovky – prehliadaču to nevadí, len nástroje to vidia ako chybu.
 - Synchronizácia panel → tabuľa ostáva v rámci jedného prehliadača (OQ-09); každý návštevník má vlastné dáta
-  vo svojom prehliadači.
+  vo svojom prehliadači. Doplnené 2026-10-25: s premennou repa `SYNC_URL` sa stránka vie pripojiť na sync server
+  a hrať na viacerých zariadeniach (ADR 0006).

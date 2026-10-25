@@ -27,13 +27,15 @@ publikum sleduje tabuľu na projektore/TV.
 - Nepoužívaj originálne logo, grafiku ani zvuky z TV relácie (licencia FremantleMedia).
 
 ## Stav projektu
-Fáza: **celý diel odohrateľný** (kolá 1–5, Zoraďovačka, finále; panel + tabuľa); časovače, zvuky a editor sád hotové – všetky P1 a P2 úlohy sú hotové; zostávajú P3 (T-010 buzzery, T-012 profil 2022). Vo vetve `feature/web-socket`: hra na viacerých
-zariadeniach cez Cloudflare Durable Objects (ADR 0006, T-015 – T-020). Stack: Vite + Vue 3 + TypeScript + Tailwind v4 (ADR 0001).
+Fáza: **celý diel odohrateľný** (kolá 1–5, Zoraďovačka, finále; panel + tabuľa); časovače, zvuky a editor sád hotové – všetky P1 a P2 úlohy sú hotové; zostávajú P3 (T-010 buzzery, T-012 profil 2022). Hra na viacerých zariadeniach cez
+miestnosť na sync serveri (Cloudflare Workers + Durable Objects, ADR 0006, T-015 – T-020). Stack: Vite + Vue 3 + TypeScript + Tailwind v4 (ADR 0001).
 
 ## Štruktúra kódu
 - `src/engine/` – herný engine (čistý TS, bez Vue/DOM), testy v `src/engine/__tests__/`
 - `src/screens/{moderator,board,editor}/` – obrazovky (routy `/moderator`, `/board`, `/editor`)
-- `src/shared/` – zdieľané veci UI (synchronizácia okien, persistencia)
+- `src/shared/` – zdieľané veci UI (persistencia, `gameStore`, `hostRoom`); `src/shared/sync/` – protokol
+  a transporty synchronizácie (BroadcastChannel / WebSocket, posun hodín) – `protocol.ts` zdieľa aj server
+- `server/` – sync server (Cloudflare Worker + Durable Object `GameRoom`), samostatný npm balík s vlastnými testami
 - `data/` – vstavané sady otázok (JSON: ukážková, GLS), registrované v `BUILT_IN_SETS` (`src/shared/questionLibrary.ts`); vlastné sady sú v knižnici editora (`localStorage`)
 
 ## Príkazy
@@ -45,4 +47,6 @@ zariadeniach cez Cloudflare Durable Objects (ADR 0006, T-015 – T-020). Stack: 
 | `npm run preview` | spustí produkčný build lokálne |
 | `npm run build:single` | jeden HTML súbor `dist-single/5proti5.html` na spustenie bez servera (ADR 0004) |
 | `npm run lint` | Oxlint + ESLint (s automatickou opravou) |
-| `npm run format` | Prettier nad `src/` |
+| `npm run format` | Prettier nad `src/` a `server/` |
+| `npm run server:dev` | lokálny sync server (http://127.0.0.1:8787; najprv `npm --prefix server install`) |
+| `npm run server:test` | testy servera v runtime Workers; `npm --prefix server run type-check` = typy |

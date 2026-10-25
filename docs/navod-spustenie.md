@@ -16,6 +16,17 @@ Aplikácia je **jeden súbor `5proti5.html`**. Nič sa neinštaluje a internet n
 
 Tabuľa ukazuje iba odkryté odpovede; všetky odpovede vidí len moderátor v paneli.
 
+## Tabuľa na inom zariadení (len online verzia)
+Ak aplikáciu používate z webovej adresy a v paneli je časť **Hra na viacerých zariadeniach**,
+tabuľa môže bežať na inom zariadení (TV, projektor, mobil). Obe zariadenia potrebujú internet.
+1. V paneli kliknite **Vytvoriť miestnosť** – zobrazí sa 6-znakový kód.
+2. Na zariadení s tabuľou otvorte odkaz alebo QR kód z panela, prípadne otvorte **Tabuľa pre publikum**
+   a zadajte kód miestnosti.
+3. Pri výpadku internetu sa obe strany samé pripoja znova; tabuľa medzitým ukazuje posledný stav.
+4. **Pokračovať v hre na inom zariadení** – odkaz pre moderátora (napr. prechod z notebooku na mobil).
+   Kto ho má, môže riadiť hru, preto ho nikomu neposielajte.
+5. Po hre kliknite **Ukončiť miestnosť**. Nepoužívaná miestnosť sa sama zmaže po 14 dňoch.
+
 ## Ovládanie z klávesnice (panel)
 | Kláves | Akcia |
 |---|---|
@@ -35,5 +46,5 @@ Tabuľa ukazuje iba odkryté odpovede; všetky odpovede vidí len moderátor v p
 ## Dobré vedieť
 - Rozohraná hra aj sady otázok sa ukladajú **v prehliadači na tomto počítači**. Po zatvorení
   a znovuotvorení súboru hra pokračuje. Na iný počítač preneste sady cez export/import v editore.
-- Panel a tabuľa musia byť otvorené v **tom istom prehliadači** na tom istom počítači.
+- Bez miestnosti musia byť panel a tabuľa otvorené v **tom istom prehliadači** na tom istom počítači.
 - Pravidlá hry sú podľa štatútu súťaže 2026 (kolá 1–5, Zoraďovačka, finále „Veľké peniaze“).

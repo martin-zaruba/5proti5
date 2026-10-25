@@ -40,7 +40,7 @@ Priority: **P1** = potrebné pre MVP, **P2** = kompletná hra, **P3** = rozšír
 | T-017 | [WebSocket transport v klientovi](done/T-017-websocket-transport.md) | P3 | T-015, T-016 | done |
 | T-018 | [Miestnosti v UI – hra na viacerých zariadeniach](done/T-018-miestnosti-v-ui.md) | P3 | T-017 | done |
 | T-019 | [Synchronizácia času medzi zariadeniami](done/T-019-synchronizacia-casu.md) | P3 | T-016, T-017 | done |
-| T-020 | [Nasadenie servera na Cloudflare a CI](todo/T-020-nasadenie-servera.md) | P3 | T-016 | todo |
+| T-020 | [Nasadenie servera na Cloudflare a CI](doing/T-020-nasadenie-servera.md) | P3 | T-016 | doing |
 
 **MVP** = T-001 až T-004 + T-007 + T-008 (odohrateľné kolá 1–5 s panelom a tabuľou).
 
