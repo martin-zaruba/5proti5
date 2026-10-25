@@ -41,14 +41,27 @@ jobs:
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      # Without the secret (e.g. before the one-time setup) skip with a warning instead of failing.
+      - id: token
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::warning::Repository secret CLOUDFLARE_API_TOKEN is not set – sync server not deployed (see README)."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.token.outputs.skip != 'true'
+        uses: actions/checkout@v4
+      - if: steps.token.outputs.skip != 'true'
+        uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
           cache-dependency-path: server/package-lock.json
-      - run: npm ci --prefix server
-      - run: npm --prefix server run deploy
+      - if: steps.token.outputs.skip != 'true'
+        run: npm ci --prefix server
+      - if: steps.token.outputs.skip != 'true'
+        run: npm --prefix server run deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
