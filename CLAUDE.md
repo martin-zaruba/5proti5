@@ -27,7 +27,8 @@ publikum sleduje tabuľu na projektore/TV.
 - Nepoužívaj originálne logo, grafiku ani zvuky z TV relácie (licencia FremantleMedia).
 
 ## Stav projektu
-Fáza: **celý diel odohrateľný** (kolá 1–5, Zoraďovačka, finále; panel + tabuľa); časovače, zvuky a editor sád hotové – všetky P1 a P2 úlohy sú hotové; zostávajú P3 (T-010 buzzery, T-012 profil 2022). Stack: Vite + Vue 3 + TypeScript + Tailwind v4 (ADR 0001).
+Fáza: **celý diel odohrateľný** (kolá 1–5, Zoraďovačka, finále; panel + tabuľa); časovače, zvuky a editor sád hotové – všetky P1 a P2 úlohy sú hotové; zostávajú P3 (T-010 buzzery, T-012 profil 2022). Vo vetve `feature/web-socket`: hra na viacerých
+zariadeniach cez Cloudflare Durable Objects (ADR 0006, T-015 – T-020). Stack: Vite + Vue 3 + TypeScript + Tailwind v4 (ADR 0001).
 
 ## Štruktúra kódu
 - `src/engine/` – herný engine (čistý TS, bez Vue/DOM), testy v `src/engine/__tests__/`

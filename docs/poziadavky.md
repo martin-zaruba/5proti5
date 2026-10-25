@@ -44,6 +44,8 @@ Na celú obrazovku (projektor/TV), len zobrazuje stav:
 
 ## Nefunkčné požiadavky
 - Beží **offline** v prehliadači na jednom počítači (žiadna povinná cloudová služba).
+- Voliteľne **viac zariadení** (tabuľa na TV, panel na notebooku/mobile) cez miestnosť na serveri – vyžaduje
+  internet (ADR 0006); bez servera aplikácia funguje ako na jednom počítači.
 - Stav hry prežije obnovenie stránky (persistencia v `localStorage`/IndexedDB).
 - Tabuľa čitateľná z diaľky: veľké písmo, vysoký kontrast, 16:9.
 - Zvukové efekty (správna odpoveď, X, buzzer, koniec času, duplicita vo finále) – s možnosťou stlmiť.
@@ -51,5 +53,5 @@ Na celú obrazovku (projektor/TV), len zobrazuje stav:
 - Herná logika oddelená od UI a **pokrytá testami** (pravidlá sú zložité a plné hraničných prípadov).
 
 ## Mimo rozsahu (zatiaľ)
-- Online hra viacerých rodín cez internet, účty používateľov, platby.
+- Online hra viacerých rodín cez internet (súťažiaci na vlastných zariadeniach), účty používateľov, platby.
 - Používanie originálnej grafiky, loga či zvukov z TV relácie (licencia FremantleMedia) – vytvoriť vlastný vizuál.

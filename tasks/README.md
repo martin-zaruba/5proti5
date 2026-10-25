@@ -35,5 +35,14 @@ Priority: **P1** = potrebné pre MVP, **P2** = kompletná hra, **P3** = rozšír
 | T-012 | [Profil 2022 a 1 proti 1](todo/T-012-profil-2022-1proti1.md) | P3 | T-003, T-006 | todo |
 | T-013 | [Zostavenie do jedného HTML súboru](done/T-013-jeden-html-subor.md) | P2 | T-007, T-008, T-011 | done |
 | T-014 | [Skrátená hra – voľba Zoraďovačky a finále](done/T-014-skratena-hra.md) | P2 | T-005, T-006, T-007 | done |
+| T-015 | [Synchronizačný protokol a transport v klientovi](todo/T-015-protokol-a-transport.md) | P3 | T-008 | todo |
+| T-016 | [Server – Cloudflare Worker a miestnosť](todo/T-016-server-cloudflare.md) | P3 | T-015 | todo |
+| T-017 | [WebSocket transport v klientovi](todo/T-017-websocket-transport.md) | P3 | T-015, T-016 | todo |
+| T-018 | [Miestnosti v UI – hra na viacerých zariadeniach](todo/T-018-miestnosti-v-ui.md) | P3 | T-017 | todo |
+| T-019 | [Synchronizácia času medzi zariadeniami](todo/T-019-synchronizacia-casu.md) | P3 | T-016, T-017 | todo |
+| T-020 | [Nasadenie servera na Cloudflare a CI](todo/T-020-nasadenie-servera.md) | P3 | T-016 | todo |
 
 **MVP** = T-001 až T-004 + T-007 + T-008 (odohrateľné kolá 1–5 s panelom a tabuľou).
+
+**Viac zariadení** (vetva `feature/web-socket`, ADR 0006) = T-015 → T-016 → T-017 → T-018, k tomu T-019 (čas)
+a T-020 (nasadenie).
