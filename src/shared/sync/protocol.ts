@@ -27,7 +27,8 @@ export interface BoardFeed {
 
 export type Role = 'host' | 'board'
 
-export type ConnectionStatus = 'connecting' | 'online' | 'offline'
+/** `closed` = the server refused us for good (see `CLOSE_CODES`); the client does not reconnect. */
+export type ConnectionStatus = 'connecting' | 'online' | 'offline' | 'closed'
 
 export type ErrorCode = 'badMessage' | 'unauthorized' | 'tooLarge' | 'unsupportedVersion'
 

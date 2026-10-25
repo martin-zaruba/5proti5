@@ -37,7 +37,7 @@ Priority: **P1** = potrebné pre MVP, **P2** = kompletná hra, **P3** = rozšír
 | T-014 | [Skrátená hra – voľba Zoraďovačky a finále](done/T-014-skratena-hra.md) | P2 | T-005, T-006, T-007 | done |
 | T-015 | [Synchronizačný protokol a transport v klientovi](done/T-015-protokol-a-transport.md) | P3 | T-008 | done |
 | T-016 | [Server – Cloudflare Worker a miestnosť](done/T-016-server-cloudflare.md) | P3 | T-015 | done |
-| T-017 | [WebSocket transport v klientovi](todo/T-017-websocket-transport.md) | P3 | T-015, T-016 | todo |
+| T-017 | [WebSocket transport v klientovi](done/T-017-websocket-transport.md) | P3 | T-015, T-016 | done |
 | T-018 | [Miestnosti v UI – hra na viacerých zariadeniach](todo/T-018-miestnosti-v-ui.md) | P3 | T-017 | todo |
 | T-019 | [Synchronizácia času medzi zariadeniami](todo/T-019-synchronizacia-casu.md) | P3 | T-016, T-017 | todo |
 | T-020 | [Nasadenie servera na Cloudflare a CI](todo/T-020-nasadenie-servera.md) | P3 | T-016 | todo |
