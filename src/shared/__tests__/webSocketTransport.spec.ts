@@ -10,6 +10,7 @@ import {
   type SyncMessage,
 } from '../sync/protocol'
 import {
+  CLOCK_BURST_MS,
   createWebSocketTransport,
   PING_INTERVAL_MS,
   RECONNECT_MAX_MS,
@@ -182,6 +183,27 @@ describe('WebSocket transport', () => {
     expect(sockets[0]!.closed).toBe(true)
     expect(sockets).toHaveLength(2)
     expect(statuses.at(-1)).toBe('connecting')
+  })
+
+  it('estimates the clock offset from the welcome and then from ping round trips', () => {
+    const transport = start()
+    expect(transport.clockOffset()).toBe(0)
+    last().open()
+    last().receive(message('welcome', { role: 'host', serverTime: Date.now() + 5000 }))
+    expect(transport.clockOffset()).toBe(5000)
+
+    // Burst of pings right after connecting; the fastest round trip wins.
+    vi.advanceTimersByTime(CLOCK_BURST_MS.at(-1)!)
+    const pings = last().sent.filter((m) => m.type === 'ping')
+    expect(pings).toHaveLength(CLOCK_BURST_MS.length)
+    const sentAt = pings[0]!.type === 'ping' ? pings[0]!.clientTime : 0
+    vi.advanceTimersByTime(40) // round trip 40 ms after the last ping
+    last().receive(
+      message('pong', { clientTime: Date.now() - 40, serverTime: Date.now() - 20 + 4900 }),
+    )
+    expect(transport.clockOffset()).toBe(4900)
+    last().receive(message('pong', { clientTime: sentAt, serverTime: Date.now() + 7000 }))
+    expect(transport.clockOffset()).toBe(4900) // slower sample ignored
   })
 
   it('reconnects right away when the browser is back online', () => {

@@ -10,6 +10,8 @@ import type { ClosedReason, WebSocketTransportOptions } from '../sync/webSocketT
 interface FakeRoom {
   options: WebSocketTransportOptions
   sent: SyncMessage[]
+  /** Server time − local time of this device. */
+  offset: number
   receive(m: SyncMessage): void
   setStatus(s: ConnectionStatus, reason?: ClosedReason): void
 }
@@ -27,6 +29,7 @@ vi.mock('../sync/webSocketTransport', async () => {
       const room: FakeRoom = {
         options,
         sent: [],
+        offset: 0,
         receive: received.emit,
         setStatus(s, reason) {
           status = s
@@ -45,6 +48,7 @@ vi.mock('../sync/webSocketTransport', async () => {
           listener(status)
           return statuses.add(listener)
         },
+        clockOffset: () => room.offset,
         close() {
           received.clear()
           statuses.clear()
@@ -124,6 +128,22 @@ describe('host room', () => {
     rooms[0]!.receive(message('session', { session: null, savedAt: 200 }))
     expect(store.session.value).toBeNull()
     expect(host.remoteChangeAt.value).not.toBeNull()
+  })
+
+  it('compares the saved times in server time (clocks of devices differ)', async () => {
+    localStorage.setItem('5proti5:room', JSON.stringify(ROOM))
+    const { store } = await withLocalGame(100)
+    rooms[0]!.offset = 1000 // this device's clock is 1 s behind the server
+
+    // Server time 1050 = local 50: older than the local game (100) – keep it, send it as 1100.
+    rooms[0]!.receive(message('session', { session: null, savedAt: 1050 }))
+    expect(store.session.value).not.toBeNull()
+    expect(sessions(rooms[0]!).at(-1)?.savedAt).toBe(1100)
+
+    // Server time 1150 = local 150: newer – adopt it with the local time.
+    rooms[0]!.receive(message('session', { session: null, savedAt: 1150 }))
+    expect(store.session.value).toBeNull()
+    expect(store.savedAt.value).toBe(150)
   })
 
   it('publishes every local change once in sync', async () => {

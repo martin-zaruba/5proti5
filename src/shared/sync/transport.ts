@@ -12,6 +12,8 @@ export interface SyncTransport {
   subscribe(listener: (message: SyncMessage) => void): () => void
   /** Calls the listener with the current status right away and on every change. */
   onStatus(listener: (status: ConnectionStatus) => void): () => void
+  /** Server time minus local time (ms) – 0 between windows of one computer (T-019). */
+  clockOffset(): number
   close(): void
 }
 

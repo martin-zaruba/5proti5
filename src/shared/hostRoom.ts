@@ -54,17 +54,22 @@ function connect(target: CreatedRoom, takeOver: boolean) {
 
   /** Nothing is sent before the room's own session arrived (it comes right after `welcome`). */
   let synced = false
+  // `savedAt` travels in server time, so devices with different clocks compare fairly (T-019);
+  // 0 (= no game) stays 0.
+  const toServer = (at: number) => (at ? at + transport.clockOffset() : 0)
+  const fromServer = (at: number) => (at ? at - transport.clockOffset() : 0)
   const sendSession = () =>
     transport.send(
-      message('session', { session: store.session.value, savedAt: store.savedAt.value }),
+      message('session', { session: store.session.value, savedAt: toServer(store.savedAt.value) }),
     )
 
   const stopSession = transport.subscribe((m) => {
     if (m.type !== 'session') return
     const first = !synced
-    const adopt = first && takeOver ? m.savedAt > 0 : m.savedAt > store.savedAt.value
+    const savedAt = fromServer(m.savedAt)
+    const adopt = first && takeOver ? m.savedAt > 0 : savedAt > store.savedAt.value
     if (adopt) {
-      store.adoptSession(m.session, m.savedAt)
+      store.adoptSession(m.session, savedAt)
       if (!first) remoteChangeAt.value = Date.now()
     }
     if (first) {

@@ -44,6 +44,7 @@ export function createLocalTransport(): SyncTransport {
       listener('online')
       return () => {}
     },
+    clockOffset: () => 0,
     close() {
       received.clear()
       if (channel) channel.close()

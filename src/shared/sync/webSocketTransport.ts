@@ -4,6 +4,7 @@
  * latest `feed` and `session` again – not a queue of every change, only the current state matters.
  */
 
+import { CLOCK_SAMPLES, clockSample, estimateOffset, type ClockSample } from './clock'
 import {
   CLOSE_CODES,
   decodeMessage,
@@ -39,6 +40,8 @@ export const RECONNECT_MAX_MS = 10_000
 export const PING_INTERVAL_MS = 15_000
 /** No message (not even a pong) for this long = the connection is dead even if the browser did not notice. */
 export const SILENCE_LIMIT_MS = 2 * PING_INTERVAL_MS + 5_000
+/** Extra pings right after connecting, so the clock offset is known before the first countdown. */
+export const CLOCK_BURST_MS = [0, 300, 900]
 
 /** Messages that carry the current state – the newest one is sent again after a reconnect. */
 const LATEST_TYPES = new Set<SyncMessage['type']>(['feed', 'session'])
@@ -63,6 +66,8 @@ export function createWebSocketTransport(options: WebSocketTransportOptions): We
   let stopped = false
   let reconnectTimer: ReturnType<typeof setTimeout> | undefined
   let lastHeard = 0
+  let burst: ReturnType<typeof setTimeout>[] = []
+  const samples: ClockSample[] = []
 
   function setStatus(next: ConnectionStatus) {
     if (status === next) return
@@ -90,6 +95,15 @@ export function createWebSocketTransport(options: WebSocketTransportOptions): We
         attempt = 0
         setStatus('online')
         for (const pending of latest.values()) ws.send(encodeMessage(pending))
+        // Rough estimate right away (off by the one-way delay); any ping round trip replaces it.
+        samples.push({ offset: m.serverTime - Date.now(), roundTrip: Number.MAX_SAFE_INTEGER })
+        if (samples.length > CLOCK_SAMPLES) samples.shift()
+        burst.forEach(clearTimeout)
+        burst = CLOCK_BURST_MS.map((delay) => setTimeout(ping, delay))
+      }
+      if (m.type === 'pong') {
+        samples.push(clockSample(m.clientTime, m.serverTime, Date.now()))
+        if (samples.length > CLOCK_SAMPLES) samples.shift()
       }
       received.emit(m)
     })
@@ -107,6 +121,12 @@ export function createWebSocketTransport(options: WebSocketTransportOptions): We
       scheduleReconnect()
     })
     // An `error` is always followed by `close`, which does the work.
+  }
+
+  function ping() {
+    if (socket && status === 'online') {
+      socket.send(encodeMessage(message('ping', { clientTime: Date.now() })))
+    }
   }
 
   function scheduleReconnect() {
@@ -128,7 +148,7 @@ export function createWebSocketTransport(options: WebSocketTransportOptions): We
   const pingTimer = setInterval(() => {
     if (!socket || status !== 'online') return
     if (Date.now() - lastHeard > SILENCE_LIMIT_MS) return restart()
-    socket.send(encodeMessage(message('ping', { clientTime: Date.now() })))
+    ping()
   }, PING_INTERVAL_MS)
 
   // Back online / back in the foreground: do not wait for the backoff.
@@ -158,9 +178,11 @@ export function createWebSocketTransport(options: WebSocketTransportOptions): We
       listener(status)
       return statusListeners.add(listener)
     },
+    clockOffset: () => estimateOffset(samples),
     close() {
       stopped = true
       clearTimeout(reconnectTimer)
+      burst.forEach(clearTimeout)
       clearInterval(pingTimer)
       if (typeof window !== 'undefined') window.removeEventListener('online', wakeUp)
       if (typeof document !== 'undefined') {

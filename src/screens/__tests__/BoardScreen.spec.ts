@@ -26,6 +26,7 @@ vi.mock('@/shared/sync/webSocketTransport', () => ({
         listener(fake.status)
         return () => {}
       },
+      clockOffset: () => 0,
       close() {},
     }
   },
