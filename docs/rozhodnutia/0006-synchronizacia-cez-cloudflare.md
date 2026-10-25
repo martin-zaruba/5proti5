@@ -27,8 +27,9 @@ Obmedzenia:
 - Úložisko: **SQLite v Durable Objecte** (dostupné aj na bezplatnom pláne). Miestnosť drží uloženú hru
   moderátora (`session`), poslednú tabuľu (`feed`) a hash moderátorského tokenu. Neaktívna miestnosť sa po
   14 dňoch zmaže (alarm).
-- Worker má len dve cesty: `POST /rooms` (založí miestnosť, vráti `roomCode` + `hostToken`) a
-  `GET /rooms/:code/ws` (upgrade na WebSocket, rola `host` alebo `board`).
+- Worker má tri cesty: `POST /rooms` (založí miestnosť, vráti `roomCode` + `hostToken`),
+  `GET /rooms/:code/ws` (upgrade na WebSocket, rola `host` alebo `board` v prvej správe `hello`) a
+  `DELETE /rooms/:code` (moderátor ukončí miestnosť).
 
 **Autorita: zdrojom pravdy je moderátorský panel**, server je relé a úložisko.
 - Engine beží ďalej v prehliadači moderátora (`gameStore`); server engine nespúšťa, kontroluje len tvar
@@ -73,6 +74,6 @@ Obmedzenia:
 - Režim na jednom počítači a jeden HTML súbor fungujú bez zmeny a bez servera.
 - Rozohraná hra (vrátane otázok sady) je v miestnosti uložená v Cloudflare, kým miestnosť nevyprší.
 - Server je ďalší deploy a ďalší `package.json` (`server/`); jeho testy bežia cez
-  `@cloudflare/vitest-pool-workers`.
+  `@cloudflare/vitest-plugin`.
 - Pri výpadku spojenia moderátor hrá ďalej (stav má lokálne) a po obnovení spojenia sa odošle posledný stav.
 - Mení OQ-09: popri jednom počítači je podporovaný aj režim viacerých zariadení cez miestnosť.

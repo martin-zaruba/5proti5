@@ -31,6 +31,34 @@ export type ConnectionStatus = 'connecting' | 'online' | 'offline'
 
 export type ErrorCode = 'badMessage' | 'unauthorized' | 'tooLarge' | 'unsupportedVersion'
 
+/**
+ * WebSocket close codes after which a client must not reconnect. (A browser cannot read the HTTP
+ * status of a refused upgrade, so the server accepts the socket and closes it with a reason.)
+ */
+export const CLOSE_CODES = {
+  unauthorized: 4001,
+  unsupportedVersion: 4002,
+  roomNotFound: 4004,
+} as const
+
+/** Answer of `POST /rooms`. */
+export interface CreatedRoom {
+  roomCode: string
+  hostToken: string
+}
+
+/** Room codes avoid characters that are easy to mix up (0/O, 1/I/L). */
+export const ROOM_CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
+export const ROOM_CODE_LENGTH = 6
+
+/** Cleans up a typed room code (case, spaces, dashes); `null` if it cannot be a room code. */
+export function normalizeRoomCode(input: string): string | null {
+  const code = input.toUpperCase().replace(/[\s-]/g, '')
+  return code.length === ROOM_CODE_LENGTH && [...code].every((c) => ROOM_CODE_ALPHABET.includes(c))
+    ? code
+    : null
+}
+
 export type SyncMessage =
   | { v: number; type: 'feed'; feed: BoardFeed }
   | { v: number; type: 'requestFeed' }

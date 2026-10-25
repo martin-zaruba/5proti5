@@ -15,7 +15,9 @@
     "lint": "run-s \"lint:*\"",
     "lint:oxlint": "oxlint . --fix",
     "lint:eslint": "eslint . --fix --cache",
-    "format": "prettier --write --experimental-cli src/"
+    "format": "prettier --write --experimental-cli src/ server/src/ server/test/",
+    "server:dev": "npm --prefix server run dev",
+    "server:test": "npm --prefix server test"
   },
   "dependencies": {
     "vue": "^3.5.42",
