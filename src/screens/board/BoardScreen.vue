@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import { subscribeToBoard, type BoardFeed } from '@/shared/boardSync'
 import { soundCues } from '@/shared/soundCues'
 import { createSoundPlayer } from '@/shared/sounds'
+import { syncServerUrl } from '@/shared/sync/config'
+import { createLocalTransport } from '@/shared/sync/localTransport'
+import { normalizeRoomCode, type ConnectionStatus } from '@/shared/sync/protocol'
+import { createWebSocketTransport, type ClosedReason } from '@/shared/sync/webSocketTransport'
 import { viewRemainingMs } from '@/shared/timer'
 
 import AnswerTile from './AnswerTile.vue'
@@ -88,9 +93,52 @@ const toggleFullscreen = () =>
     ? document.exitFullscreen()
     : document.documentElement.requestFullscreen()
 
+/* ---------- connection: this computer (BroadcastChannel) or a room on the server (?room=) ---------- */
+const route = useRoute()
+const router = useRouter()
+const roomCode = computed(() =>
+  syncServerUrl && typeof route.query.room === 'string'
+    ? normalizeRoomCode(route.query.room)
+    : null,
+)
+const connection = ref<ConnectionStatus>('online')
+const closedReason = ref<ClosedReason | null>(null)
+const CLOSED_TEXT: Record<ClosedReason, string> = {
+  roomNotFound: 'Miestnosť neexistuje alebo ju moderátor ukončil.',
+  unauthorized: 'Do miestnosti sa nedá pripojiť.',
+  unsupportedVersion: 'Server má novšiu verziu aplikácie – obnov stránku.',
+}
+
 let unsubscribe = () => {}
+function connect() {
+  unsubscribe()
+  feed.value = null
+  closedReason.value = null
+  const code = roomCode.value
+  const room = code
+    ? createWebSocketTransport({ serverUrl: syncServerUrl!, roomCode: code, role: 'board' })
+    : null
+  const transport = room ?? createLocalTransport()
+  transport.onStatus((value) => {
+    connection.value = value
+    if (value === 'closed') closedReason.value = room?.closedReason ?? null
+  })
+  unsubscribe = subscribeToBoard((f) => (feed.value = f), transport)
+}
+watch(roomCode, connect)
+
+/** The TV has no link to click: the room code can be typed in. */
+const codeInput = ref('')
+const codeError = ref(false)
+function joinRoom() {
+  const code = normalizeRoomCode(codeInput.value)
+  codeError.value = !code
+  if (code) void router.replace({ path: route.path, query: { room: code } })
+}
+const leaveRoom = () => router.replace({ path: route.path })
+
 onMounted(() => {
-  unsubscribe = subscribeToBoard((f) => (feed.value = f))
+  connect()
   document.addEventListener('fullscreenchange', onFullscreenChange)
   window.addEventListener('pointerdown', unlockAudio)
   window.addEventListener('keydown', unlockAudio)
@@ -149,7 +197,43 @@ const TEAM_TEXT = ['text-sky-300', 'text-orange-300'] as const
           <span class="mx-[2cqw] text-amber-300">vs.</span>
           <span :class="TEAM_TEXT[1]">{{ view.teams[1]!.name }}</span>
         </p>
-        <p v-else class="text-[2cqw] text-blue-200">Čaká sa na moderátora…</p>
+        <template v-else>
+          <p class="text-[2cqw] text-blue-200">
+            <template v-if="!roomCode">Čaká sa na moderátora…</template>
+            <template v-else-if="connection === 'online'">
+              Čaká sa na moderátora… (miestnosť
+              <span class="font-mono font-bold text-amber-300">{{ roomCode }}</span
+              >)
+            </template>
+            <template v-else-if="connection !== 'closed'">Pripájam sa k miestnosti…</template>
+          </p>
+          <form
+            v-if="syncServerUrl && (!roomCode || connection === 'closed')"
+            class="flex flex-col items-center gap-[1cqw]"
+            @submit.prevent="joinRoom"
+          >
+            <label for="room-code" class="text-[1.6cqw] text-blue-200">
+              Hra na inom zariadení? Zadaj kód miestnosti:
+            </label>
+            <div class="flex gap-[1cqw]">
+              <input
+                id="room-code"
+                v-model="codeInput"
+                class="w-[22cqw] rounded-[0.6cqw] border-[0.2cqw] border-amber-300/60 bg-blue-950/80 px-[1.5cqw] py-[0.6cqw] text-center font-mono text-[2.6cqw] font-bold tracking-[0.3em] text-amber-300 uppercase outline-none focus:border-amber-300"
+                maxlength="8"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="ABCDEF"
+              />
+              <button
+                class="rounded-[0.6cqw] bg-amber-300 px-[2cqw] text-[2cqw] font-black text-blue-950 hover:brightness-110"
+              >
+                Pripojiť
+              </button>
+            </div>
+            <p v-if="codeError" class="text-[1.6cqw] text-red-300">Kód má 6 písmen a číslic.</p>
+          </form>
+        </template>
       </div>
 
       <!-- Game over -->
@@ -288,6 +372,26 @@ const TEAM_TEXT = ['text-sky-300', 'text-orange-300'] as const
           >
         </div>
       </Transition>
+
+      <!-- Room: lost connection (the last state stays on screen) or the room is gone -->
+      <div
+        v-if="roomCode && connection === 'closed'"
+        class="absolute inset-x-0 top-0 flex items-center justify-center gap-[2cqw] bg-red-950/90 py-[1cqw] text-[1.8cqw] font-bold"
+        role="alert"
+      >
+        {{ closedReason ? CLOSED_TEXT[closedReason] : 'Odpojené.' }}
+        <button class="rounded bg-white/15 px-[1.5cqw] hover:bg-white/30" @click="leaveRoom">
+          Zadať iný kód
+        </button>
+      </div>
+      <div
+        v-else-if="roomCode && view && connection !== 'online'"
+        class="absolute top-[1cqw] left-[1cqw] flex items-center gap-[0.8cqw] rounded bg-black/60 px-[1.2cqw] py-[0.4cqw] text-[1.4cqw]"
+        role="status"
+      >
+        <span class="size-[1cqw] animate-pulse rounded-full bg-amber-400" />
+        Spojenie prerušené – pripájam znova…
+      </div>
 
       <button
         v-if="!muted && !audioReady"

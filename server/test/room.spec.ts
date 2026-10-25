@@ -95,6 +95,8 @@ describe('sync server', () => {
     const host = await join(roomCode, 'host', hostToken)
     const board = await join(roomCode, 'board')
     const otherHost = await join(roomCode, 'host', hostToken)
+    // No game in the room yet: hosts still get a session, so they know they are in sync.
+    expect(await otherHost.next()).toEqual(message('session', { session: null, savedAt: 0 }))
 
     const session = message('session', { session: null, savedAt: 42 })
     host.send(session)

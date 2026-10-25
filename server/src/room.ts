@@ -144,9 +144,11 @@ export class GameRoom extends DurableObject<Env> {
     // Like the local transport: a new client first gets the last known state.
     const feed = await this.ctx.storage.get<BoardFeed>(FEED)
     if (feed) send(ws, message('feed', { feed }))
+    // A host always gets a session (savedAt 0 = the room has no game yet): until then it does not send
+    // its own, so a panel that joins a running room does not overwrite the game with its local one.
     if (role === 'host') {
       const session = await this.ctx.storage.get<SessionMessage>(SESSION)
-      if (session) send(ws, session)
+      send(ws, session ?? message('session', { session: null, savedAt: 0 }))
     }
   }
 
