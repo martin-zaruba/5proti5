@@ -7,7 +7,8 @@ export default mergeConfig(
   defineConfig({
     test: {
       environment: 'jsdom',
-      exclude: [...configDefaults.exclude, 'e2e/**'],
+      // server/ has its own tests in the Workers runtime (npm run server:test).
+      exclude: [...configDefaults.exclude, 'e2e/**', 'server/**'],
       root: fileURLToPath(new URL('./', import.meta.url)),
     },
   }),

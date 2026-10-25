@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2024",
+    "lib": ["ES2024"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["@cloudflare/vitest-plugin/types"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    // The shared protocol (../src/shared/sync) imports app types through the app's alias.
+    "paths": { "@/*": ["../src/*"] }
+  },
+  "include": ["src", "test", "worker-configuration.d.ts"]
+}

@@ -21,6 +21,7 @@ import { useGameStore } from '@/shared/gameStore'
 import ConfirmButton from '@/shared/ConfirmButton.vue'
 import FinalPanel from './FinalPanel.vue'
 import RankingAnswers from './RankingAnswers.vue'
+import RoomPanel from './RoomPanel.vue'
 import TimerControl from './TimerControl.vue'
 
 const store = useGameStore()
@@ -419,6 +420,8 @@ const time = (iso: string) => new Date(iso).toLocaleTimeString('sk-SK')
             Otázka na tabuli
           </label>
         </div>
+
+        <RoomPanel />
 
         <TimerControl />
 

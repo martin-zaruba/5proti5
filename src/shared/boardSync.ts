@@ -1,63 +1,62 @@
 /**
- * Moderator → board synchronisation (ADR 0001): BroadcastChannel for live updates,
- * localStorage copy of the last feed so a freshly opened board shows the current state.
- * Only `BoardView` is ever sent – never the full game state with hidden answers.
+ * Moderator → board synchronisation over any `SyncTransport` (ADR 0006); by default between windows
+ * of one browser. Only `BoardFeed` is ever sent to boards – never the full game state with hidden answers.
+ * On the wire the countdown is in server time (T-019): every device converts with its own clock offset.
  */
 
-import type { BoardView } from '@/engine'
+import { shiftFeed } from './sync/clock'
+import { createLocalTransport } from './sync/localTransport'
+import { message, type BoardFeed } from './sync/protocol'
+import type { SyncTransport } from './sync/transport'
 
-import { loadJson, saveJson, storageKey } from './storage'
-import type { TimerView } from './timer'
-
-/** Everything the board shows: the game, the countdown and whether sounds are muted. */
-export interface BoardFeed {
-  view: BoardView | null
-  timer: TimerView | null
-  muted: boolean
-}
-
-const CHANNEL = '5proti5-board'
-const FEED_KEY = 'board-feed'
-
-type Message = { type: 'board'; feed: BoardFeed } | { type: 'requestBoard' }
-
-function openChannel(): BroadcastChannel | null {
-  return typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel(CHANNEL)
-}
+export type { BoardFeed }
 
 /** Moderator side: publish feeds and answer requests from boards that were just opened. */
-export function createBoardPublisher(current: () => BoardFeed) {
-  const channel = openChannel()
-  channel?.addEventListener('message', (event: MessageEvent<Message>) => {
-    if (event.data.type === 'requestBoard') channel.postMessage({ type: 'board', feed: current() })
+export function createBoardPublisher(
+  current: () => BoardFeed,
+  transport: SyncTransport = createLocalTransport(),
+) {
+  let offset = 0
+  const send = (feed: BoardFeed) => {
+    offset = transport.clockOffset()
+    transport.send(message('feed', { feed: shiftFeed(feed, offset) }))
+  }
+  const stop = transport.subscribe((m) => {
+    if (m.type === 'requestFeed') send(current())
+    // A better clock estimate arrived while the countdown runs: send it again in correct server time.
+    if (m.type === 'pong' && current().timer?.running && transport.clockOffset() !== offset) {
+      send(current())
+    }
   })
   return {
-    publish(feed: BoardFeed) {
-      saveJson(FEED_KEY, feed)
-      channel?.postMessage({ type: 'board', feed } satisfies Message)
+    publish: send,
+    close() {
+      stop()
+      transport.close()
     },
-    close: () => channel?.close(),
   }
 }
 
 /** Board side: receive feeds; returns a function that stops listening. */
-export function subscribeToBoard(onFeed: (feed: BoardFeed | null) => void): () => void {
-  onFeed(loadJson<BoardFeed>(FEED_KEY))
-
-  const channel = openChannel()
-  if (channel) {
-    channel.addEventListener('message', (event: MessageEvent<Message>) => {
-      if (event.data.type === 'board') onFeed(event.data.feed)
-    })
-    channel.postMessage({ type: 'requestBoard' } satisfies Message)
-    return () => channel.close()
+export function subscribeToBoard(
+  onFeed: (feed: BoardFeed) => void,
+  transport: SyncTransport = createLocalTransport(),
+): () => void {
+  let last: BoardFeed | null = null
+  let offset = 0
+  const show = (feed: BoardFeed) => {
+    last = feed
+    offset = transport.clockOffset()
+    onFeed(shiftFeed(feed, -offset))
   }
-
-  // Fallback without BroadcastChannel. Not used together with it: a late storage event
-  // could bring back an older feed and the board would play its sounds again.
-  const onStorage = (event: StorageEvent) => {
-    if (event.key === storageKey(FEED_KEY)) onFeed(loadJson<BoardFeed>(FEED_KEY))
+  const stop = transport.subscribe((m) => {
+    if (m.type === 'feed') show(m.feed)
+    // The first feed may come before the clock offset is known – correct a running countdown.
+    if (m.type === 'pong' && last?.timer?.running && transport.clockOffset() !== offset) show(last)
+  })
+  transport.send(message('requestFeed', {}))
+  return () => {
+    stop()
+    transport.close()
   }
-  window.addEventListener('storage', onStorage)
-  return () => window.removeEventListener('storage', onStorage)
 }

@@ -1,0 +1,54 @@
+# Sync server (ADR 0006): tests on every push touching it, deploy to Cloudflare from master.
+# One-time setup: repository secret CLOUDFLARE_API_TOKEN ("Edit Cloudflare Workers" template) and,
+# if the token can access more accounts, secret CLOUDFLARE_ACCOUNT_ID – see README.
+name: Sync server
+
+on:
+  push:
+    paths:
+      - 'server/**'
+      - 'src/shared/sync/protocol.ts'
+      - '.github/workflows/server.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: server-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            server/package-lock.json
+      # The server type-checks the shared protocol, which imports app types (engine).
+      - run: npm ci
+      - run: npm ci --prefix server
+      - run: npm --prefix server run type-check
+      - run: npm --prefix server test
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci --prefix server
+      - run: npm --prefix server run deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

@@ -1,0 +1,19 @@
+{
+  "name": "5proti5-sync",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.4.7",
+    "typescript": "~6.0.0",
+    "vitest": "^4.1.11",
+    "wrangler": "^4.152.0"
+  },
+  "scripts": {
+    "dev": "wrangler dev",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "type-check": "wrangler types && tsc",
+    "types": "wrangler types",
+    "deploy": "wrangler deploy"
+  }
+}

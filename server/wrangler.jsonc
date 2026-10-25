@@ -1,0 +1,17 @@
+// Sync server for multi-device games (ADR 0006): one Durable Object per room.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "5proti5-sync",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "observability": { "enabled": true },
+  "durable_objects": {
+    "bindings": [{ "name": "ROOMS", "class_name": "GameRoom" }],
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["GameRoom"] }],
+  "vars": {
+    // Browsers that may use the server (comma separated); "null" = the single HTML file opened from disk.
+    // Requests without an Origin header (non-browser clients) are allowed – there are no cookies to protect.
+    "ALLOWED_ORIGINS": "https://martin-zaruba.github.io,http://localhost:5173,http://localhost:4173,null",
+  },
+}

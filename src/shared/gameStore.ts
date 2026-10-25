@@ -42,13 +42,13 @@ const SESSION_VERSION = 1
 interface StoredSession {
   version: number
   session: GameSession
+  /** When the game last changed (ms); decides which copy wins between devices (OQ-18). */
+  savedAt?: number
 }
 
-function loadSession(): GameSession | null {
-  const stored = loadJson<StoredSession>(SESSION_KEY)
-  if (stored?.version !== SESSION_VERSION || !stored.session?.state?.phase) return null
+/** Fills in what older versions did not save – also for games received from another device. */
+function migrateSession(session: GameSession): GameSession {
   // Games saved before the setup had options (T-014) are full episodes.
-  const { session } = stored
   const migrate = (state: GameState): GameState =>
     state.options ? state : { ...state, options: resolveOptions(FULL_GAME, session.questionSet) }
   return {
@@ -58,7 +58,15 @@ function loadSession(): GameSession | null {
   }
 }
 
-const session = shallowRef<GameSession | null>(loadSession())
+function loadSession(): StoredSession | null {
+  const stored = loadJson<StoredSession>(SESSION_KEY)
+  if (stored?.version !== SESSION_VERSION || !stored.session?.state?.phase) return null
+  return { ...stored, session: migrateSession(stored.session) }
+}
+
+const stored = loadSession()
+const session = shallowRef<GameSession | null>(stored?.session ?? null)
+const savedAt = ref(stored?.savedAt ?? 0)
 const error = ref<string | null>(null)
 const boardView = computed(() => (session.value ? toBoardView(session.value.state) : null))
 
@@ -86,11 +94,12 @@ function ensurePublisher() {
   if (publisher) return
   publisher = createBoardPublisher(() => feed.value)
   watch(
-    session,
-    (value) => {
+    [session, savedAt],
+    ([value, at]) => {
       saveJson(
         SESSION_KEY,
-        value && ({ version: SESSION_VERSION, session: value } satisfies StoredSession),
+        value &&
+          ({ version: SESSION_VERSION, session: value, savedAt: at } satisfies StoredSession),
       )
     },
     { immediate: true },
@@ -101,6 +110,7 @@ function ensurePublisher() {
 function run(update: () => GameSession | null) {
   try {
     session.value = update()
+    savedAt.value = Date.now()
     error.value = null
     // An answer was given (or taken back) – the next one gets a fresh 3 s; the final clock keeps running.
     if (timer.value?.kind === 'answer') timer.value = resetTimer(timer.value)
@@ -119,6 +129,16 @@ export function useGameStore() {
     canUndo: computed(() => (session.value ? canUndo(session.value) : false)),
     timer,
     muted,
+    /** What the boards show – published by `boardSync` (here and in a room, see `hostRoom`). */
+    feed,
+    savedAt,
+
+    /** Takes over a game from another device of the room (it keeps its `savedAt`). */
+    adoptSession(next: GameSession | null, at: number) {
+      session.value = next && migrateSession(next)
+      savedAt.value = at
+      error.value = null
+    },
 
     /** Space: the answer timer always starts from the full limit, the final timer toggles pause. */
     toggleTimer() {

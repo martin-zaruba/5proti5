@@ -39,3 +39,9 @@ Dokumentácia a UI sú po slovensky, **kód (identifikátory) po anglicky**. Tá
 | časovač, limit | `timer`, `timeLimit` | odpočet 3 s na odpoveď, 20 s / 25 s vo finále |
 | zvukový signál | `SoundCue` | zvuk, ktorý zahrá tabuľa (buzzer, X, správne, koniec času …) |
 | stlmiť | `muted` | vypnutie zvukov tabule z panela |
+| miestnosť | `room` (`GameRoom` na serveri) | jedna hra zdieľaná medzi zariadeniami (ADR 0006) |
+| kód miestnosti | `roomCode` | 6-znakový kód na pripojenie tabule |
+| token moderátora | `hostToken` | tajomstvo, ktoré oprávňuje meniť stav miestnosti |
+| obsah tabule | `BoardFeed` | čo dostáva tabuľa: `BoardView`, časovač, stlmenie |
+| transport | `SyncTransport` | spôsob prenosu (`BroadcastChannel` / WebSocket) |
+| spojenie | `connection` (`connecting` / `online` / `offline`) | stav pripojenia na server |
