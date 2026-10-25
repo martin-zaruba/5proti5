@@ -105,13 +105,10 @@ function requireQuestion(final: FinalState, question: number): Question {
 
 const withFinal = (state: GameState, final: FinalState): GameState => ({ ...state, final })
 
-export function chooseFinalPlayers(
-  state: GameState,
-  positions: [number, number],
-  profile: RuleProfile,
-): GameState {
+export function chooseFinalPlayers(state: GameState, positions: [number, number]): GameState {
   const final = requireFinal(state, ['choosePlayers'], 'Hráči finále sú už vybraní.')
-  const valid = (p: number) => Number.isInteger(p) && p >= 1 && p <= profile.teamSize
+  const size = state.teams[final.team].players.length
+  const valid = (p: number) => Number.isInteger(p) && p >= 1 && p <= size
   if (!positions.every(valid) || positions[0] === positions[1]) {
     throw new GameError('Vyber dvoch rôznych hráčov víťazného družstva.')
   }

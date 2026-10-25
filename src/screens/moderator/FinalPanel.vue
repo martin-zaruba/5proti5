@@ -2,6 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 
 import {
+  captainPosition,
   currentFinalPlayer,
   finalTotal,
   prizeLabel,
@@ -20,7 +21,10 @@ const player = computed(() => currentFinalPlayer(final.value))
 const answering = computed(() => final.value.step === 'playerA' || final.value.step === 'playerB')
 
 /* ---------- choosing the two players ---------- */
-const chosen = ref<[number, number]>([1, requireProfile(state.value.profileId).captainPosition])
+const chosen = ref<[number, number]>([
+  1,
+  captainPosition(requireProfile(state.value.profileId), team.value.players.length),
+])
 const playerName = (position: number) => team.value.players[position - 1]
 
 /* ---------- answers ---------- */

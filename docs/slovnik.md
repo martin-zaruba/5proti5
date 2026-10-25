@@ -6,7 +6,8 @@ Dokumentácia a UI sú po slovensky, **kód (identifikátory) po anglicky**. Tá
 |---|---|---|
 | družstvo, rodina | `team` | jedno z dvoch súťažiacich družstiev |
 | hráč, člen | `player` | člen družstva |
-| pozícia | `position` | poradie hráča v rade (1–5) |
+| pozícia | `position` | poradie hráča v rade (1 až počet hráčov) |
+| počet hráčov v družstve | `teamSize` | 2–5, štatút 5 (OQ-20) |
 | kapitán, hlava rodiny | `captain` | hráč na pozícii 5 (profil 2026) |
 | moderátor | `host` | ovláda hru |
 | tabuľa | `board` | obrazovka pre publikum |

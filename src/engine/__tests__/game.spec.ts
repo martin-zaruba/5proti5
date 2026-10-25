@@ -45,7 +45,7 @@ describe('createGame', () => {
     expect(state.teams[0].players[0]).toBe('Hráč 1')
   })
 
-  it('requires 5 players per team', () => {
+  it('requires the same number of players in both teams', () => {
     expect(() =>
       createGame(
         [
@@ -54,7 +54,24 @@ describe('createGame', () => {
         ],
         makeSet(),
       ),
-    ).toThrow(GameError)
+    ).toThrow('rovnaký počet hráčov')
+  })
+
+  it('allows 2 to 5 players per team (OQ-20)', () => {
+    const game = (size: number) => {
+      const players = Array.from({ length: size }, (_, i) => `${i + 1}`)
+      return () =>
+        createGame(
+          [
+            { name: 'A', players },
+            { name: 'B', players },
+          ],
+          makeSet(),
+        )
+    }
+    for (const size of [2, 3, 4, 5]) expect(game(size)().teams[0].players).toHaveLength(size)
+    expect(game(1)).toThrow('2 až 5 hráčov')
+    expect(game(6)).toThrow('2 až 5 hráčov')
   })
 })
 

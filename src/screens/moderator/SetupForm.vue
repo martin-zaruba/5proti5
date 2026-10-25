@@ -3,6 +3,8 @@ import { computed, reactive, ref, watch } from 'vue'
 
 import {
   canPlayFinal,
+  captainPosition,
+  faceOffPosition,
   PROFILE_2026,
   parseQuestionSet,
   type GameOptions,
@@ -17,18 +19,33 @@ import { loadJson, saveJson } from '@/shared/storage'
 const store = useGameStore()
 const profile = PROFILE_2026
 
-const emptyTeam = (name: string): TeamSetup => ({
-  name,
-  players: Array.from({ length: profile.teamSize }, () => ''),
-})
+/* Team size 2–5 (OQ-20). The form keeps names for the largest team, so changing the size loses nothing. */
+const { min: minSize, max: maxSize } = profile.teamSize
+const sizes = Array.from({ length: maxSize - minSize + 1 }, (_, i) => minSize + i)
+const savedSize = loadJson<number>('setup-team-size')
+const teamSize = ref(savedSize && sizes.includes(savedSize) ? savedSize : maxSize)
+watch(teamSize, (value) => saveJson('setup-team-size', value))
 
+const withAllPositions = (team: TeamSetup): TeamSetup => ({
+  name: team.name,
+  players: Array.from({ length: maxSize }, (_, i) => team.players[i] ?? ''),
+})
+const saved = loadJson<[TeamSetup, TeamSetup]>('setup-teams')
 const teams = reactive<[TeamSetup, TeamSetup]>(
-  loadJson<[TeamSetup, TeamSetup]>('setup-teams') ?? [
-    emptyTeam('Družstvo A'),
-    emptyTeam('Družstvo B'),
-  ],
+  saved
+    ? [withAllPositions(saved[0]), withAllPositions(saved[1])]
+    : [
+        withAllPositions({ name: 'Družstvo A', players: [] }),
+        withAllPositions({ name: 'Družstvo B', players: [] }),
+      ],
 )
 watch(teams, (value) => saveJson('setup-teams', value), { deep: true })
+
+const captain = computed(() => captainPosition(profile, teamSize.value))
+/** Positions at the buzzer in rounds 1–5 (the line starts over with fewer players). */
+const buzzerOrder = computed(() =>
+  profile.standardRounds.map((r) => faceOffPosition(r.number, teamSize.value)).join(', '),
+)
 
 /* Question set from the library (T-011); the editor prepares the sets. */
 const library = useQuestionLibrary()
@@ -78,7 +95,12 @@ async function onFile(event: Event) {
 }
 
 function start() {
-  if (result.value.set) store.startGame(teams, result.value.set, options)
+  if (!result.value.set) return
+  const playing = (team: TeamSetup): TeamSetup => ({
+    name: team.name,
+    players: team.players.slice(0, teamSize.value),
+  })
+  store.startGame([playing(teams[0]), playing(teams[1])], result.value.set, options)
 }
 </script>
 
@@ -88,6 +110,16 @@ function start() {
       <h1 class="text-3xl font-black">Nová hra</h1>
       <p class="text-slate-400">Profil pravidiel: {{ profile.label }}</p>
     </header>
+
+    <label class="flex flex-wrap items-center gap-3">
+      <span class="font-bold">Počet hráčov v družstve</span>
+      <select v-model.number="teamSize" class="input mt-0 w-auto">
+        <option v-for="n in sizes" :key="n" :value="n">{{ n }}</option>
+      </select>
+      <span v-if="teamSize < maxSize" class="text-sm text-slate-400">
+        Štatút má {{ maxSize }} hráčov – menšie družstvá sú úprava pre menšiu skupinu.
+      </span>
+    </label>
 
     <section class="grid gap-6 md:grid-cols-2">
       <fieldset
@@ -103,20 +135,21 @@ function start() {
           <span class="text-sm text-slate-400">Názov družstva</span>
           <input v-model="team.name" class="input text-lg font-bold" />
         </label>
-        <div v-for="(_, p) in team.players" :key="p" class="flex items-center gap-3">
+        <div v-for="p in teamSize" :key="p - 1" class="flex items-center gap-3">
           <span class="w-24 shrink-0 text-sm text-slate-400">
-            Pozícia {{ p + 1 }}
-            <strong v-if="p + 1 === profile.captainPosition" class="block text-amber-400"
-              >kapitán</strong
-            >
+            Pozícia {{ p }}
+            <strong v-if="p === captain" class="block text-amber-400">kapitán</strong>
           </span>
-          <input v-model="team.players[p]" class="input" :placeholder="`Hráč ${p + 1}`" />
+          <input v-model="team.players[p - 1]" class="input" :placeholder="`Hráč ${p}`" />
         </div>
       </fieldset>
     </section>
     <p class="text-sm text-slate-400">
-      Pozícia 1 stojí najbližšie k moderátorovi, kapitán na pozícii {{ profile.captainPosition }}. V
-      kole N ide k pultu hráč na pozícii N.
+      Pozícia 1 stojí najbližšie k moderátorovi, kapitán na pozícii {{ captain }}.
+      <template v-if="teamSize === maxSize">V kole N ide k pultu hráč na pozícii N.</template>
+      <template v-else>
+        K pultu idú postupne hráči na pozíciách {{ buzzerOrder }} (po kapitánovi sa rad opakuje).
+      </template>
     </p>
 
     <section class="space-y-3 rounded-xl border border-slate-700 p-4">

@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import {
+  captainPosition,
   currentTurns,
   finalTotal,
   isLastRound,
@@ -12,6 +13,7 @@ import {
   otherTeam,
   prizeLabel,
   requireProfile,
+  teamSize,
   type GameAction,
   type GameState,
   type TeamIndex,
@@ -31,6 +33,7 @@ const state = computed(() => store.state.value as GameState)
 const round = computed(() => state.value.round)
 const ranking = computed(() => state.value.ranking)
 const profile = computed(() => requireProfile(state.value.profileId))
+const captain = computed(() => captainPosition(profile.value, teamSize(state.value.teams)))
 const turns = computed(() => currentTurns(state.value))
 const phase = computed(() => state.value.phase)
 const act = (action: GameAction) => store.act(action)
@@ -41,7 +44,7 @@ const TEAM_BORDER = ['border-sky-500', 'border-orange-500'] as const
 
 const teamName = (team: TeamIndex) => state.value.teams[team].name
 const player = (team: TeamIndex, position: number) =>
-  `${state.value.teams[team].players[position - 1]} (poz. ${position}${position === profile.value.captainPosition ? ', kapitán' : ''})`
+  `${state.value.teams[team].players[position - 1]} (poz. ${position}${position === captain.value ? ', kapitán' : ''})`
 const isOnTurn = (team: TeamIndex, position: number) =>
   turns.value.some((t) => t.team === team && t.position === position)
 const isActiveTeam = (team: TeamIndex) => turns.value.length === 1 && turns.value[0]!.team === team
@@ -209,7 +212,12 @@ const time = (iso: string) => new Date(iso).toLocaleTimeString('sk-SK')
           <h2 class="truncate text-xl font-black" :class="TEAM_TEXT[t]">{{ teamName(t) }}</h2>
           <span class="text-4xl font-black tabular-nums">{{ state.teams[t].score }}</span>
         </div>
-        <ol class="mt-2 grid grid-cols-5 gap-1 text-center text-xs">
+        <ol
+          class="mt-2 grid gap-1 text-center text-xs"
+          :style="{
+            gridTemplateColumns: `repeat(${state.teams[t].players.length}, minmax(0, 1fr))`,
+          }"
+        >
           <li
             v-for="(name, p) in state.teams[t].players"
             :key="p"
